@@ -46,7 +46,7 @@
           <div class="doorway">
             <div class="inside">
               <div class="bear-slot dudu-host" data-bear="dudu" data-mood="happy"></div>
-              <svg class="tea tea-held" viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
+              <svg class="pizza pizza-held" viewBox="0 0 60 60" aria-hidden="true"><use href="#pizza"/></svg>
             </div>
             <div class="door" id="door">
               <div class="door-panel"></div><div class="door-panel"></div>
@@ -57,10 +57,11 @@
         </div>
         <div class="bubu-walk">
           <div class="bear-slot" data-bear="bubu" data-mood="tired"></div>
+          <svg class="pizza pizza-bubu" viewBox="0 0 60 60" aria-hidden="true"><use href="#pizza"/></svg>
           <svg class="bag" viewBox="0 0 60 50" aria-hidden="true"><rect x="4" y="10" width="52" height="36" rx="10" fill="#F4AFB4" stroke="#4B2C25" stroke-width="3.5"/><path d="M18 10 Q30 -2 42 10" fill="none" stroke="#4B2C25" stroke-width="3.5" stroke-linecap="round"/><rect x="20" y="22" width="20" height="10" rx="4" fill="#FFFBF5" stroke="#4B2C25" stroke-width="3"/></svg>
         </div>
         <div class="bubble bubble-bubu" id="b1a">mai coliz se aa gayiii… battery 0</div>
-        <div class="bubble bubble-dudu" id="b1b">Welcome home, Bhondu. Tea’s still warm.</div>
+        <div class="bubble bubble-dudu" id="b1b">BUBUUUUUUUUUUU my pyaari baby agayi! Ye dekh Laddu, Domino’s pizza!</div>
         <p class="hint" id="hint1">Tap the door handle</p>
       </div>
       <div class="caption">
@@ -129,10 +130,12 @@
           <div class="duvet" id="duvet"></div>
           <div class="mattress"></div>
           <svg class="tea tea-bed" id="teaBed" viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
+          <div class="bear-slot plush-bed" data-bear="dudu" data-mood="sleep"></div>
+          <div class="bear-slot plush-bed plush-bed-2" data-bear="bubu" data-mood="happy"></div>
         </div>
         <div class="battery" aria-live="polite">
           <div class="battery-shell" id="battery">
-            <span class="cell on"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+            <span class="cell on"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
           </div>
           <span class="battery-label" id="batteryLabel">Almost empty. That’s okay.</span>
         </div>
@@ -152,6 +155,10 @@
           <button class="item" data-item="tea">
             <svg viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
             <span>Warm drink</span>
+          </button>
+          <button class="item" data-item="plush">
+            <div class="bear-slot plush-icon" data-bear="dudu" data-mood="happy"></div>
+            <span>Her plushies</span>
           </button>
         </div>
       </div>
@@ -192,7 +199,7 @@
           <p>If your battery is empty, let it be empty. Sleep it off, go quiet, stare at the ceiling. I’ll still be right here when you wake up.</p>
           <p>You never have to carry the heavy stuff alone. If you want to tell me everything, I’ll listen to every word. If you don’t want to say anything at all, I’ll just sit next to you in the silence. Both are perfect.</p>
           <p>You’re not a burden on bad days. You’re my favourite person on all of them.</p>
-          <p>Goodnight, Laddu. I love you, cutu.</p>
+          <p>Meri duniya ki sabse pyaari Bubu, my world, my baby. I love you sabse zyadaaa.</p>
           <p class="signoff">your Dudu</p>
         </article>
       </div>
@@ -208,6 +215,12 @@
   <div class="fx" id="fx" aria-hidden="true"></div>
 
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="pizza" viewBox="0 0 60 60">
+      <path d="M8 12 Q30 2 52 12 L31 56 Q29 58 27 55 Z" fill="#FFD27A" stroke="#4B2C25" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M8 12 Q30 2 52 12 L49 18 Q30 9 11 18 Z" fill="#E0A15E" stroke="#4B2C25" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="24" cy="26" r="5" fill="#E0574F"/><circle cx="37" cy="27" r="4.5" fill="#E0574F"/><circle cx="30" cy="40" r="4" fill="#E0574F"/>
+      <path d="M20 36 q2 3 5 1 M38 36 q-1 3 -4 3" fill="none" stroke="#7FB069" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
     <symbol id="tea" viewBox="0 0 60 56">
       <path d="M22 4 q-4 6 0 10 M32 2 q-4 6 0 10" fill="none" stroke="#C9B6AE" stroke-width="3" stroke-linecap="round"/>
       <path d="M8 18 H46 V36 a14 14 0 0 1 -14 14 H22 a14 14 0 0 1 -14 -14 Z" fill="#FFFBF5" stroke="#4B2C25" stroke-width="3.5" stroke-linejoin="round"/>

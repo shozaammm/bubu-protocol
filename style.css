@@ -134,7 +134,12 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 }
 .inside { position: absolute; inset: 0; border-radius: 82px 82px 0 0; overflow: hidden; background: radial-gradient(circle at 50% 30%, #FFF1C9, #FFD98A); }
 .dudu-host { position: absolute; width: 140px; left: 50%; bottom: -6px; transform: translateX(-50%) translateY(20px); opacity: 0; transition: .5s .35s; }
-.tea-held { position: absolute; width: 38px; left: 50%; bottom: 12px; margin-left: -19px; opacity: 0; transition: .4s .6s; }
+.pizza-held { position: absolute; width: 46px; left: 50%; bottom: 14px; margin-left: -23px; opacity: 0; transform: rotate(160deg); transition: opacity .4s .6s; }
+.scene-door.handed .pizza-held { opacity: 0 !important; transition: opacity .2s; }
+.pizza-bubu { position: absolute; width: 44px; left: 50%; bottom: 16px; margin-left: -22px; transform: rotate(170deg) scale(0); transition: transform .45s cubic-bezier(.3,1.6,.5,1); z-index: 2; }
+.scene-door.handed .pizza-bubu { transform: rotate(170deg) scale(1); }
+.scene-door.handed .bubu-walk .bear-slot { animation: hop .5s ease-out 2; }
+@keyframes hop { 40% { transform: translateY(-16px); } }
 .door {
   position: absolute; inset: 0; border-radius: 82px 82px 0 0;
   background: #B98463; border: 0; transform-origin: left center;
@@ -152,7 +157,7 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .scene-door.open .door { transform: rotateY(-108deg); }
 .scene-door.open .knob { animation: none; pointer-events: none; }
 .scene-door.open .dudu-host { opacity: 1; transform: translateX(-50%); }
-.scene-door.open .tea-held { opacity: 1; }
+.scene-door.open .pizza-held { opacity: 1; }
 .mat { height: 14px; margin: 0 -14px; background: var(--petal); border: 3px solid var(--ink); border-radius: 8px; }
 
 .bubu-walk { position: absolute; bottom: 12%; left: 6%; width: 130px; animation: trudge 2.6s ease-out both; }
@@ -163,6 +168,7 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .scene-door.inside-now .bubu-walk { transition: transform 1s ease-in, opacity .6s .5s; transform: translateX(190px) scale(.85); opacity: 0; }
 .bubble-bubu { left: 4%; top: 10%; }
 .bubble-dudu { right: 4%; top: 8%; }
+.scene-door .bubble-dudu { max-width: min(300px, 62%); overflow-wrap: anywhere; }
 
 /* ---------- ch2 hammer ---------- */
 .scene-hammer { background: repeating-linear-gradient(90deg, #FBEDEA 0 40px, #F7E4E0 40px 80px); }
@@ -217,6 +223,11 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .bed.covered .duvet { transform: none; opacity: 1; }
 .tea-bed { position: absolute; width: 44px; right: -40px; bottom: 56px; z-index: 3; opacity: 0; transform: translateY(10px); transition: .5s; }
 .bed.has-tea .tea-bed { opacity: 1; transform: none; }
+.plush-bed { position: absolute; width: 58px; left: 96px; bottom: 74px; z-index: 3; transform: rotate(-12deg) scale(0); transition: transform .5s cubic-bezier(.3,1.6,.5,1); }
+.bed.has-plush .plush-bed { transform: rotate(-12deg) scale(1); }
+.plush-bed-2 { left: 146px; bottom: 70px; width: 50px; transition-delay: .15s; }
+.bed.has-plush .plush-bed-2 { transform: rotate(10deg) scale(1); }
+.item .plush-icon { width: 40px; height: 40px; pointer-events: none; }
 .battery { position: absolute; left: 14px; top: 14px; display: flex; flex-direction: column; gap: 4px; z-index: 4; }
 .battery-shell { display: flex; gap: 5px; padding: 6px 8px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; position: relative; width: max-content; }
 .battery-shell::after { content: ""; position: absolute; right: -9px; top: 50%; width: 6px; height: 14px; margin-top: -7px; background: var(--ink); border-radius: 0 3px 3px 0; }
@@ -314,7 +325,10 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
   .bed { width: 64%; transform: translateX(-66%); }
   .lamp { right: 3%; width: 44px; }
   .pager .btn { white-space: nowrap; }
-  .item { width: 94px; }
+  .tray { gap: 8px; flex-wrap: nowrap; }
+  .item { width: 80px; font-size: 13px; padding: 8px 4px; }
+  .plush-bed { left: 76px; width: 48px; }
+  .plush-bed-2 { left: 118px; width: 42px; }
   .polaroids { grid-template-columns: repeat(2, 1fr); }
   .snuggle { width: 270px; }
   .s-dudu, .s-bubu { width: 128px; }

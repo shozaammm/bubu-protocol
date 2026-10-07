@@ -195,7 +195,8 @@
   let doorTimers = [];
   enter[1] = () => {
     doorTimers.forEach(clearTimeout); doorTimers = [];
-    door.classList.remove('open', 'inside-now');
+    door.classList.remove('open', 'inside-now', 'handed');
+    setMood($('.bubu-walk .bear-slot'), 'tired');
     $('#b1a').classList.remove('show'); $('#b1b').classList.remove('show');
     $('#hint1').hidden = false;
     $('#n1').textContent = 'Bubu drags herself home from coliz, bag scraping along the floor. One more step. Just one more.';
@@ -208,9 +209,16 @@
     Sound.fx.creak();
     door.classList.add('open');
     await wait(900);
-    $('#b1b').classList.add('show'); Sound.fx.squeak();
-    $('#n1').textContent = 'Dudu was already waiting, arms wide open and a cup of warm tea in paw. No questions. Just come in.';
-    await wait(2400);
+    $('#b1b').classList.add('show'); Sound.fx.squeak(); Sound.fx.giggle(.3);
+    $('#n1').textContent = 'Dudu was already at the door, way too excited, with a slice of Domino’s ready for her.';
+    await wait(2800);
+    $('#b1b').classList.remove('show');
+    door.classList.add('handed');
+    setMood($('.bubu-walk .bear-slot'), 'excited');
+    Sound.fx.pop(); Sound.fx.giggle(.2);
+    burst(...centerOf($('.bubu-walk')), 12);
+    $('#n1').textContent = 'One look at the pizza and Bubu’s tired face melts into the biggest smile.';
+    await wait(2600);
     door.classList.add('inside-now');
     floatHearts(...centerOf($('.doorway')), 5);
     Sound.fx.chime();
@@ -262,7 +270,7 @@
 
   /* ---------- Chapter 3: the blanket fort ---------- */
   const fort = $('#fortScene'), bed = $('#bed'), cells = $$('.cell'), shell = $('#battery');
-  const LABELS = ['Almost empty. That’s okay.', 'A tiny bit warmer.', 'Getting cozy.', 'Full of love. No talking required.'];
+  const LABELS = ['Almost empty. That’s okay.', 'A tiny bit warmer.', 'Getting cozy.', 'Almost there.', 'Full of love. No talking required.'];
   const used = new Set();
   function apply(kind) {
     if (used.has(kind)) return;
@@ -271,12 +279,13 @@
     if (kind === 'duvet') { bed.classList.add('covered'); Sound.fx.whoosh(); }
     if (kind === 'lamp') { fort.classList.add('dim'); Sound.fx.pop(); }
     if (kind === 'tea') { bed.classList.add('has-tea'); Sound.fx.squeak(); }
+    if (kind === 'plush') { bed.classList.add('has-plush'); Sound.fx.squeak(); Sound.fx.giggle(.15); }
     const n = used.size;
     cells[n].classList.add('on'); shell.classList.add('full');
     Sound.fx.heart(n);
     $('#batteryLabel').textContent = LABELS[n];
     floatHearts(...centerOf(bed), 3);
-    if (n === 3) {
+    if (n === cells.length - 1) {
       setTimeout(() => {
         setMood($('.bed-bubu'), 'sleep');
         $('#n3').textContent = 'Resting without speaking is 100% allowed. Encouraged, even.';
@@ -332,7 +341,7 @@
   const MEMORIES = [
     { label: 'mai coliz ja rahiii', back: 'And somehow I miss you before you even reach the gate.', bg: '#FDE2E4', art: 'bubu-wave' },
     { label: 'Laddu', back: 'Round, sweet, and my favourite thing. No notes.', bg: '#FFF1C9', art: 'heart' },
-    { label: 'Bhondu', back: 'Official title. Lifetime appointment. Cannot be revoked.', bg: '#E5ECFB', art: 'dudu' },
+    { label: 'Dudu', back: 'Secretly makes me feel the best in the world when my Bubu calls me Dudu.', bg: '#E5ECFB', art: 'dudu' },
     { label: 'cutu', back: 'Not a nickname. A factual description.', bg: '#E8F4E4', art: 'bubu' },
     { label: 'low-battery days', back: 'You don’t have to be bubbly for me to love you. Quiet you is my favourite too.', bg: '#F3E6F7', art: 'sleep' },
     { label: 'just existing', back: 'You don’t have to do anything today. Being you is already enough.', bg: '#FFE7D6', art: 'both' },
