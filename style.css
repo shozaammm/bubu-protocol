@@ -347,3 +347,42 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .polaroids { max-width: 640px; margin: 0 auto; }
 .lede, .narration, .letter p { text-wrap: pretty; }
 .face .photo .heart-art svg { width: 100%; }
+
+/* ---------- epilogue: always ---------- */
+.scene-always { background: linear-gradient(#E9E3F2, #F7E1E0); transition: background 1.2s; }
+.scene-always.sunny { background: linear-gradient(#FFE9C7, #F9D3D6); }
+.weather { position: absolute; left: 50%; top: 10%; width: 150px; height: 120px; transform: translateX(-50%); }
+.w { position: absolute; inset: 0; width: 100%; opacity: 0; transform: scale(.6); transition: opacity .4s, transform .5s; pointer-events: none; }
+.w.on { opacity: 1; transform: none; }
+.w.melt { opacity: 0; transform: scale(.2) translateY(30px); transition: opacity .6s, transform .6s ease-in; }
+.w-storm.on .bolt { animation: flash 1.4s steps(1) infinite; }
+@keyframes flash { 0%, 60% { opacity: 1; } 70% { opacity: 0; } 80% { opacity: 1; } 90% { opacity: 0; } }
+.w-rain.on .drops { animation: drizzle .8s linear infinite; }
+@keyframes drizzle { from { transform: translateY(-4px); opacity: .5; } to { transform: translateY(6px); opacity: 1; } }
+.w-clash { display: flex; justify-content: center; gap: 46px; padding-top: 40px; }
+.w-clash span { display: grid; place-items: center; width: 48px; height: 48px; border: 3px solid var(--ink); border-radius: 50%; background: #fff; font: 700 30px var(--round); }
+.w-clash.on span { animation: jab .6s ease-in-out infinite alternate; }
+.w-clash.on span + span { animation-delay: .3s; }
+@keyframes jab { to { transform: translateY(-6px) rotate(8deg); } }
+.pair { position: absolute; left: 50%; bottom: 8%; display: flex; align-items: flex-end; transform: translateX(-50%); }
+.pair .bear-slot { width: clamp(110px, 22vw, 150px); transition: margin .9s cubic-bezier(.4,0,.2,1), transform .9s; }
+.a-dudu { margin-right: var(--gap, 160px); }
+.pair.hug .a-dudu { margin-right: -34px; transform: rotate(8deg); }
+.pair.hug .a-bubu { transform: rotate(-8deg); }
+.pair.hug { animation: squeeze 1.2s ease-in-out .9s 2; }
+@keyframes squeeze { 50% { transform: translateX(-50%) scale(1.06, .96); } }
+.vow { margin: 0; max-width: 34ch; font-family: var(--hand); font-weight: 700; font-size: 26px; line-height: 1.2; text-wrap: balance; min-height: 2.4em; }
+.vow .yes { color: var(--heart); }
+.vow.final { font-size: clamp(30px, 6vw, 40px); animation: unfold .8s cubic-bezier(.3,1.2,.5,1); }
+.the-end { margin: 0; font-size: 15px; opacity: .7; }
+@media (max-width: 560px) {
+  .pair { --gap: 90px; }
+  .vow { font-size: 23px; }
+}
+.w-heart { transition: opacity .5s .4s, transform .8s .4s cubic-bezier(.3,1.6,.5,1); }
+.w-heart.on { animation: heartbeat 1.2s ease-in-out 1.4s infinite; }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(.96); } 45% { transform: scale(1.08); } }
+@media (max-width: 560px) {
+  .dots { gap: 7px; }
+  .dots button { width: 12px; height: 12px; }
+}

@@ -20,3 +20,7 @@ Run it locally with `python3 -m http.server 8777`, then open http://localhost:87
 - Polaroid jokes: the `MEMORIES` array in `app.js`.
 - Bedtime letter: the `<article class="letter">` block in `index.html`.
 - Dialogue bubbles and narration are inline in `index.html`. Chapters 1–2 also update their text from `app.js`.
+
+## Epilogue: Always
+
+A storm cloud, two clashing speech bubbles and a rain cloud hang between the bears. Each tap answers one line (*"If we argue, I will still love you"*, *"If we disagree, I still love you"*, *"If we have a bad day, I will still love you"*). The weather melts into hearts, a Bubu voice clip plays, and the bears step closer. A bridge line follows (*"There is nothing in this world that will ever change my feelings for you, no matter the struggle."*), then *"At the end of the day, I will always love you."* The bears hug, a big heart beats in the sky, hearts float up, and a music-box lullaby plays.

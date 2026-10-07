@@ -87,6 +87,13 @@
       heart:  (n = 0) => tone({ f: [523, 659, 784, 1046][n % 4], dur: .4, vol: .1 }),
       flip:   () => { noise(.08, .12, 0, 2500); tone({ f: 600, to: 900, dur: .06, vol: .06 }); },
       sigh:   () => tone({ f: 330, to: 220, dur: .9, type: 'triangle', vol: .05 }),
+      rumble: () => { noise(1.2, .35, 0, 120); noise(.8, .2, .5, 90); },
+      rain:   () => { for (let i = 0; i < 6; i++) noise(.25, .06, i * .18, 3200); },
+      clash:  () => { tone({ f: 300, to: 260, dur: .15, type: 'square', vol: .04 }); tone({ f: 340, to: 380, dur: .15, type: 'square', vol: .04, at: .2 }); },
+      resolve:() => [784, 988, 1175, 1568].forEach((f, i) => tone({ f, dur: .6, vol: .09, at: i * .08 })),
+      // a little music-box lullaby for the last page
+      lullaby:() => [[659, 0], [784, .3], [880, .6], [784, .9], [659, 1.2], [587, 1.5], [659, 1.8], [523, 2.3], [659, 2.6], [784, 2.9], [1046, 3.3]]
+                      .forEach(([f, at]) => { tone({ f, dur: .9, vol: .09, at }); tone({ f: f * 2, dur: .4, vol: .02, at }); }),
     };
     // lo-fi bedtime loop: soft triangle pads + sparse music-box notes
     const CHORDS = [[174.6, 220, 261.6, 329.6], [164.8, 196, 246.9, 293.7], [146.8, 174.6, 220, 261.6], [130.8, 164.8, 196, 246.9]];
@@ -115,7 +122,7 @@
       start: ['b01'], tired: ['b02'], welcome: ['b03'], pizza: ['b04', 'b05'],
       summon: ['b06'], bonk: ['b07', 'b08', 'b09'], bonked: ['b10'],
       duvet: ['b11'], lamp: ['b12'], tea: ['b13'], plush: ['b14'], sleepy: ['b15'],
-      polaroid: ['b16', 'b17'], hug: ['b18'],
+      polaroid: ['b16', 'b17'], hug: ['b18'], always: ['b04', 'b10', 'b05'], forever: ['b18'],
     };
     const buffers = {}, turn = {};
     let ready = Promise.resolve();
@@ -175,11 +182,11 @@
   /* ================= PAGES ================= */
   const pages = $$('.page'), book = $('#book'), pager = $('#pager');
   const dots = $('#dots'), prevBtn = $('#prevBtn'), nextBtn = $('#nextBtn');
-  const TITLES = ['Cover', 'The heavy door', 'The hammer room', 'The blanket fort', 'Memory constellations', 'The cozy haven'];
+  const TITLES = ['Cover', 'The heavy door', 'The hammer room', 'The blanket fort', 'Memory constellations', 'The cozy haven', 'Always'];
   let current = 0;
   pages.forEach((_, i) => {
     const li = document.createElement('li'), b = document.createElement('button');
-    b.setAttribute('aria-label', i ? `Chapter ${i}: ${TITLES[i]}` : 'Cover');
+    b.setAttribute('aria-label', i === 6 ? 'Epilogue: Always' : i ? `Chapter ${i}: ${TITLES[i]}` : 'Cover');
     b.addEventListener('click', () => go(i));
     li.appendChild(b); dots.appendChild(li);
   });
@@ -455,6 +462,79 @@
   hugBtn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) hold(e); });
   hugBtn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') release(); });
   hugBtn.addEventListener('contextmenu', e => e.preventDefault());
+
+  /* ---------- Epilogue: always ---------- */
+  const VOWS = [
+    { q: 'If we argue,', a: 'I will still love you.', w: 'storm', moods: ['tired', 'angry'], gap: 150, sfx: 'rumble' },
+    { q: 'If we disagree,', a: 'I still love you.', w: 'clash', moods: ['angry', 'angry'], gap: 110, sfx: 'clash' },
+    { q: 'If we have a bad day,', a: 'I will still love you.', w: 'rain', moods: ['tired', 'tired'], gap: 70, sfx: 'rain' },
+  ];
+  const alwaysScene = $('#alwaysScene'), pair = $('#pair'), vow = $('#vow'), vowBtn = $('#vowBtn');
+  const [aDudu, aBubu] = $$('.bear-slot', pair);
+  let vstep = 0, vbusy = false, vtimers = [];
+  const vlater = (fn, ms) => vtimers.push(setTimeout(fn, ms));
+  function showVow(i) {
+    const v = VOWS[i];
+    $$('.w', alwaysScene).forEach(w => w.classList.remove('on', 'melt'));
+    $(`.w-${v.w}`, alwaysScene).classList.add('on');
+    setMood(aDudu, v.moods[0]); setMood(aBubu, v.moods[1]);
+    pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .6 : v.gap) + 'px');
+    vow.textContent = v.q;
+    vowBtn.textContent = `…${v.a}`;
+    vowBtn.hidden = false;
+    Sound.fx[v.sfx]();
+  }
+  enter[6] = () => {
+    vtimers.forEach(clearTimeout); vtimers = [];
+    vstep = 0; vbusy = false;
+    alwaysScene.classList.remove('sunny'); pair.classList.remove('hug');
+    vow.classList.remove('final'); $('#theEnd').hidden = true;
+    showVow(0);
+  };
+  vowBtn.addEventListener('click', () => {
+    if (vbusy) return;
+    vbusy = true; vowBtn.hidden = true;
+    if (vstep < VOWS.length) {
+      const v = VOWS[vstep], w = $(`.w-${v.w}`, alwaysScene);
+      vow.innerHTML = '';
+      vow.append(v.q + ' ');
+      const yes = document.createElement('span'); yes.className = 'yes'; yes.textContent = v.a;
+      vow.append(yes);
+      burst(...centerOf(w), 12);
+      w.classList.replace('on', 'melt');
+      setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
+      pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .45 : v.gap * .7) + 'px');
+      Sound.fx.resolve(); Sound.voice('always', { at: .25 });
+      vstep++;
+      vlater(() => {
+        vbusy = false;
+        if (vstep < VOWS.length) return showVow(vstep);
+        // the bridge line before the finale
+        alwaysScene.classList.add('sunny');
+        pair.style.setProperty('--gap', '24px');
+        setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
+        vow.textContent = 'There is nothing in this world that will ever change my feelings for you, no matter the struggle.';
+        vowBtn.textContent = 'At the end of the day…';
+        vowBtn.hidden = false;
+        Sound.fx.chime();
+      }, 2200);
+      return;
+    }
+    // finale
+    pair.classList.add('hug');
+    $('.w-heart', alwaysScene).classList.add('on');
+    setMood(aDudu, 'sleep'); setMood(aBubu, 'excited');
+    vow.textContent = 'At the end of the day, I will always love you.';
+    vow.classList.remove('final'); vow.offsetHeight; vow.classList.add('final');
+    Sound.fx.lullaby(); Sound.voice('forever', { at: .6 });
+    const [cx, cy] = centerOf(pair);
+    vlater(() => burst(cx, cy - 40, 22), 700);
+    for (let i = 0; i < 6; i++) vlater(() => {
+      const r = alwaysScene.getBoundingClientRect();
+      floatHearts(r.left + r.width * (.15 + Math.random() * .7), r.bottom - 30, 4);
+    }, 900 + i * 500);
+    vlater(() => { $('#theEnd').hidden = false; vbusy = false; }, 3800);
+  });
 
   /* ---------- boot ---------- */
   paintBears();
