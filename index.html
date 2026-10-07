@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bubu Protocol</title>
+  <meta name="description" content="A little picture book for low-battery days.">
+  <meta name="theme-color" content="#F7E1E0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐼</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">Bubu Protocol</span>
+    <button class="sound" id="soundBtn" aria-pressed="true" aria-label="Turn sound off">
+      <span class="sound-on">Sound on</span><span class="sound-off">Sound off</span>
+    </button>
+  </header>
+
+  <main class="book" id="book">
+
+    <!-- COVER -->
+    <section class="page is-active" data-page="0" aria-label="Cover">
+      <div class="scene scene-cover">
+        <div class="cover-bears">
+          <div class="bear-slot" data-bear="dudu" data-mood="happy"></div>
+          <div class="bear-slot" data-bear="bubu" data-mood="happy"></div>
+        </div>
+        <svg class="cover-heart float" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 34 C6 24 2 16 2 10 A9 9 0 0 1 20 7 A9 9 0 0 1 38 10 C38 16 34 24 20 34Z" fill="#EE6B6B" stroke="#4B2C25" stroke-width="3" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="caption">
+        <p class="for">For Pratha</p>
+        <h1>Bubu Protocol</h1>
+        <p class="lede">A little picture book for the days your battery runs out. Nothing to do here except be looked after.</p>
+        <button class="btn btn-main" id="startBtn">Open the book</button>
+      </div>
+    </section>
+
+    <!-- CH 1: THE HEAVY DOOR -->
+    <section class="page" data-page="1" aria-label="Chapter 1, The heavy door">
+      <div class="scene scene-door">
+        <div class="house">
+          <div class="doorway">
+            <div class="inside">
+              <div class="bear-slot dudu-host" data-bear="dudu" data-mood="happy"></div>
+              <svg class="tea tea-held" viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
+            </div>
+            <div class="door" id="door">
+              <div class="door-panel"></div><div class="door-panel"></div>
+              <button class="knob" id="knob" aria-label="Open the door"></button>
+            </div>
+          </div>
+          <div class="mat"></div>
+        </div>
+        <div class="bubu-walk">
+          <div class="bear-slot" data-bear="bubu" data-mood="tired"></div>
+          <svg class="bag" viewBox="0 0 60 50" aria-hidden="true"><rect x="4" y="10" width="52" height="36" rx="10" fill="#F4AFB4" stroke="#4B2C25" stroke-width="3.5"/><path d="M18 10 Q30 -2 42 10" fill="none" stroke="#4B2C25" stroke-width="3.5" stroke-linecap="round"/><rect x="20" y="22" width="20" height="10" rx="4" fill="#FFFBF5" stroke="#4B2C25" stroke-width="3"/></svg>
+        </div>
+        <div class="bubble bubble-bubu" id="b1a">mai coliz se aa gayiii… battery 0</div>
+        <div class="bubble bubble-dudu" id="b1b">Welcome home, Bhondu. Tea’s still warm.</div>
+        <p class="hint" id="hint1">Tap the door handle</p>
+      </div>
+      <div class="caption">
+        <p class="chapter">Chapter 1: The heavy door</p>
+        <p class="narration" id="n1">Bubu drags herself home from coliz, bag scraping along the floor. One more step. Just one more.</p>
+      </div>
+    </section>
+
+    <!-- CH 2: THE HAMMER ROOM -->
+    <section class="page" data-page="2" aria-label="Chapter 2, The hammer room">
+      <div class="scene scene-hammer">
+        <div class="arena" id="arena">
+          <div class="runner" id="runner">
+            <div class="bear-slot" data-bear="dudu" data-mood="angry"></div>
+            <svg class="hammer" viewBox="0 0 120 120" aria-hidden="true">
+              <rect x="54" y="40" width="12" height="76" rx="6" fill="#E8B27C" stroke="#4B2C25" stroke-width="4"/>
+              <rect x="18" y="6" width="84" height="44" rx="18" fill="#F58FA0" stroke="#4B2C25" stroke-width="4"/>
+              <rect x="10" y="12" width="14" height="32" rx="6" fill="#FFD7DD" stroke="#4B2C25" stroke-width="4"/>
+              <rect x="96" y="12" width="14" height="32" rx="6" fill="#FFD7DD" stroke="#4B2C25" stroke-width="4"/>
+            </svg>
+          </div>
+          <div class="target" id="target" hidden>
+            <div class="sign" id="signText"></div>
+            <svg class="cat" viewBox="0 0 160 140" aria-hidden="true">
+              <g stroke="#4B2C25" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+                <path d="M30 60 L24 14 L62 38 Z" fill="#B9B4C9"/>
+                <path d="M130 60 L136 14 L98 38 Z" fill="#B9B4C9"/>
+                <ellipse cx="80" cy="82" rx="62" ry="50" fill="#CFCADD"/>
+                <path d="M142 96 Q160 80 150 60" fill="none"/>
+              </g>
+              <circle cx="56" cy="76" r="14" fill="#fff" stroke="#4B2C25" stroke-width="4"/>
+              <circle cx="60" cy="80" r="5" fill="#4B2C25"/>
+              <circle cx="104" cy="78" r="7" fill="#fff" stroke="#4B2C25" stroke-width="4"/>
+              <circle cx="103" cy="77" r="2.5" fill="#4B2C25"/>
+              <path d="M70 104 Q80 98 92 104" fill="none" stroke="#4B2C25" stroke-width="4" stroke-linecap="round"/>
+              <path d="M84 104 q2 12 9 10 q5 -2 2 -12" fill="#F58FA0" stroke="#4B2C25" stroke-width="3.5"/>
+              <path d="M20 86 L40 90 M20 98 L40 96 M140 86 L120 90 M140 98 L120 96" stroke="#4B2C25" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="empty-arena" id="emptyArena">The room is clear. Nothing’s bothering Bubu here.</p>
+        </div>
+        <div class="bubble bubble-dudu bubble-left" id="b2">Who ruined my Bubu’s mood? Name them.</div>
+        <div class="bonk-count" id="bonkCount" aria-live="polite"></div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Chapter 2: The hammer room</p>
+        <form class="annoy-form" id="annoyForm" autocomplete="off">
+          <label for="annoyInput" class="sr-only">What annoyed you today?</label>
+          <input id="annoyInput" maxlength="40" placeholder="What annoyed you?" />
+          <button class="btn" type="submit">Summon it</button>
+        </form>
+        <button class="btn btn-bonk" id="bonkBtn" disabled>Bonk!</button>
+      </div>
+    </section>
+
+    <!-- CH 3: THE BLANKET FORT -->
+    <section class="page" data-page="3" aria-label="Chapter 3, The blanket fort">
+      <div class="scene scene-fort" id="fortScene">
+        <div class="lamp" aria-hidden="true">
+          <div class="lamp-glow"></div>
+          <svg viewBox="0 0 80 120"><path d="M14 52 L26 8 L54 8 L66 52 Z" fill="#FFE3A3" stroke="#4B2C25" stroke-width="4" stroke-linejoin="round"/><rect x="36" y="52" width="8" height="48" fill="#C99B78" stroke="#4B2C25" stroke-width="4"/><rect x="18" y="100" width="44" height="12" rx="6" fill="#C99B78" stroke="#4B2C25" stroke-width="4"/></svg>
+        </div>
+        <div class="bed" id="bed">
+          <div class="pillow"></div>
+          <div class="bear-slot bed-bubu" data-bear="bubu" data-mood="tired"></div>
+          <div class="duvet" id="duvet"></div>
+          <div class="mattress"></div>
+          <svg class="tea tea-bed" id="teaBed" viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
+        </div>
+        <div class="battery" aria-live="polite">
+          <div class="battery-shell" id="battery">
+            <span class="cell on"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          </div>
+          <span class="battery-label" id="batteryLabel">Almost empty. That’s okay.</span>
+        </div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Chapter 3: The blanket fort</p>
+        <p class="narration" id="n3">Drag something cozy onto Bubu, or just tap it.</p>
+        <div class="tray" id="tray">
+          <button class="item" data-item="duvet">
+            <svg viewBox="0 0 60 50" aria-hidden="true"><rect x="4" y="8" width="52" height="36" rx="12" fill="#F4AFB4" stroke="#4B2C25" stroke-width="3.5"/><circle cx="20" cy="22" r="3" fill="#fff"/><circle cx="38" cy="30" r="3" fill="#fff"/><circle cx="30" cy="18" r="2.4" fill="#fff"/></svg>
+            <span>Fluffy duvet</span>
+          </button>
+          <button class="item" data-item="lamp">
+            <svg viewBox="0 0 60 50" aria-hidden="true"><path d="M30 6 a16 16 0 1 0 14 24 a13 13 0 1 1 -14 -24z" fill="#FFD98A" stroke="#4B2C25" stroke-width="3.5" stroke-linejoin="round"/></svg>
+            <span>Dim the lamp</span>
+          </button>
+          <button class="item" data-item="tea">
+            <svg viewBox="0 0 60 56" aria-hidden="true"><use href="#tea"/></svg>
+            <span>Warm drink</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH 4: MEMORY CONSTELLATIONS -->
+    <section class="page" data-page="4" aria-label="Chapter 4, Memory constellations">
+      <div class="scene scene-wall">
+        <svg class="fairy" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 6 Q50 34 100 12 T200 12 T300 12 T400 6" fill="none" stroke="#7A5A4E" stroke-width="2"/>
+        </svg>
+        <div class="bulbs" aria-hidden="true"></div>
+        <div class="polaroids" id="polaroids"></div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Chapter 4: Memory constellations</p>
+        <p class="narration">Dudu strung up some lights. Tap a photo to turn it over.</p>
+      </div>
+    </section>
+
+    <!-- CH 5: THE COZY HAVEN -->
+    <section class="page" data-page="5" aria-label="Chapter 5, The cozy haven">
+      <div class="scene scene-night" id="nightScene">
+        <div class="stars" aria-hidden="true"></div>
+        <div class="moon" aria-hidden="true"></div>
+        <div class="snuggle" id="snuggle">
+          <div class="bear-slot s-dudu" data-bear="dudu" data-mood="sleep"></div>
+          <div class="bear-slot s-bubu" data-bear="bubu" data-mood="sleep"></div>
+          <div class="night-blanket"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Chapter 5: The cozy haven</p>
+        <button class="btn btn-hug" id="hugBtn"><span class="hug-ring"></span><span class="hug-label">Hold for a hug</span></button>
+        <article class="letter" id="letter" hidden>
+          <p>Bhondu,</p>
+          <p>You don’t owe anyone a smile today. Not coliz, not your friends, not even me.</p>
+          <p>If your battery is empty, let it be empty. Sleep it off, go quiet, stare at the ceiling. I’ll still be right here when you wake up.</p>
+          <p>You never have to carry the heavy stuff alone. If you want to tell me everything, I’ll listen to every word. If you don’t want to say anything at all, I’ll just sit next to you in the silence. Both are perfect.</p>
+          <p>You’re not a burden on bad days. You’re my favourite person on all of them.</p>
+          <p>Goodnight, Laddu. I love you, cutu.</p>
+          <p class="signoff">your Dudu</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="pager" id="pager" aria-label="Pages">
+    <button class="btn btn-ghost" id="prevBtn">Back</button>
+    <ol class="dots" id="dots"></ol>
+    <button class="btn" id="nextBtn">Next page</button>
+  </nav>
+
+  <div class="fx" id="fx" aria-hidden="true"></div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="tea" viewBox="0 0 60 56">
+      <path d="M22 4 q-4 6 0 10 M32 2 q-4 6 0 10" fill="none" stroke="#C9B6AE" stroke-width="3" stroke-linecap="round"/>
+      <path d="M8 18 H46 V36 a14 14 0 0 1 -14 14 H22 a14 14 0 0 1 -14 -14 Z" fill="#FFFBF5" stroke="#4B2C25" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M46 24 h4 a7 7 0 0 1 0 14 h-5" fill="none" stroke="#4B2C25" stroke-width="3.5"/>
+      <path d="M27 31 c-4-4-9 1-0 7 c9-6 4-11 0-7z" fill="#EE6B6B"/>
+    </symbol>
+  </svg>
+
+  <script src="app.js"></script>
+</body>
+</html>
