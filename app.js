@@ -109,8 +109,36 @@
       master.gain.setTargetAtTime(v ? .9 : 0, ctx.currentTime, .1);
       if (v) { ctx.resume(); startMusic(); }
     }
+    // Real Bubu voice clips (sounds/bNN.m4a). Each moment in the book maps to one or more clips;
+    // lists rotate so repeated taps don't sound identical. Missing clips fall back to synth.
+    const VOICE = {
+      start: ['b01'], tired: ['b02'], welcome: ['b03'], pizza: ['b04', 'b05'],
+      summon: ['b06'], bonk: ['b07', 'b08', 'b09'], bonked: ['b10'],
+      duvet: ['b11'], lamp: ['b12'], tea: ['b13'], plush: ['b14'], sleepy: ['b15'],
+      polaroid: ['b16', 'b17'], hug: ['b18'],
+    };
+    const buffers = {}, turn = {};
+    let ready = Promise.resolve();
+    function loadVoices() {
+      const ids = [...new Set(Object.values(VOICE).flat())];
+      ready = Promise.all(ids.map(id => fetch(`sounds/${id}.m4a`).then(r => r.ok ? r.arrayBuffer() : Promise.reject())
+        .then(b => ctx.decodeAudioData(b)).then(buf => { buffers[id] = buf; }).catch(() => {})));
+    }
+    function voice(role, { at = 0, vol = 1 } = {}) {
+      const list = VOICE[role];
+      if (!ctx || !on || !list) return false;
+      const id = list[(turn[role] = ((turn[role] ?? -1) + 1) % list.length)];
+      const buf = buffers[id];
+      if (!buf) return false;
+      const src = ctx.createBufferSource(), g = ctx.createGain(), t = ctx.currentTime + at;
+      g.gain.value = vol; src.buffer = buf; src.connect(g); g.connect(master); src.start(t);
+      // duck the music under her voice
+      musicBus.gain.setTargetAtTime(.35, t, .05);
+      musicBus.gain.setTargetAtTime(1, t + buf.duration, .4);
+      return true;
+    }
     document.addEventListener('visibilitychange', () => { if (ctx) document.hidden ? ctx.suspend() : on && ctx.resume(); });
-    return { init, fx, startMusic, setOn, get on() { return on; } };
+    return { init() { const first = !ctx; init(); if (first) loadVoices(); }, fx, voice, startMusic, setOn, get on() { return on; }, get ready() { return ready; } };
   })();
 
   /* ================= PARTICLES ================= */
@@ -186,7 +214,8 @@
     soundBtn.setAttribute('aria-label', v ? 'Turn sound off' : 'Turn sound on');
   });
   $('#startBtn').addEventListener('click', () => {
-    Sound.init(); Sound.setOn(Sound.on); Sound.startMusic(); Sound.fx.giggle();
+    Sound.init(); Sound.setOn(Sound.on); Sound.startMusic();
+    Sound.ready.then(() => Sound.voice('start') || Sound.fx.giggle());
     go(1);
   });
 
@@ -201,7 +230,7 @@
     $('#hint1').hidden = false;
     $('#n1').textContent = 'Bubu drags herself home from coliz, bag scraping along the floor. One more step. Just one more.';
     const walker = $('.bubu-walk'); walker.style.animation = 'none'; walker.offsetHeight; walker.style.animation = '';
-    doorTimers.push(setTimeout(() => { $('#b1a').classList.add('show'); Sound.fx.sigh(); }, 2400));
+    doorTimers.push(setTimeout(() => { $('#b1a').classList.add('show'); Sound.voice('tired') || Sound.fx.sigh(); }, 2400));
   };
   $('#knob').addEventListener('click', async () => {
     if (door.classList.contains('open')) return;
@@ -209,13 +238,13 @@
     Sound.fx.creak();
     door.classList.add('open');
     await wait(900);
-    $('#b1b').classList.add('show'); Sound.fx.squeak(); Sound.fx.giggle(.3);
+    $('#b1b').classList.add('show'); Sound.voice('welcome') || (Sound.fx.squeak(), Sound.fx.giggle(.3));
     $('#n1').textContent = 'Dudu was already at the door, way too excited, with a slice of Domino’s ready for her.';
     await wait(2800);
     $('#b1b').classList.remove('show');
     door.classList.add('handed');
     setMood($('.bubu-walk .bear-slot'), 'excited');
-    Sound.fx.pop(); Sound.fx.giggle(.2);
+    Sound.fx.pop(); Sound.voice('pizza', { at: .1 }) || Sound.fx.giggle(.2);
     burst(...centerOf($('.bubu-walk')), 12);
     $('#n1').textContent = 'One look at the pizza and Bubu’s tired face melts into the biggest smile.';
     await wait(2600);
@@ -240,7 +269,7 @@
     setMood(dudu2, 'angry');
     bonkBtn.disabled = false; bonkBtn.focus({ preventScroll: true });
     input.value = '';
-    Sound.fx.pop();
+    Sound.fx.pop(); Sound.voice('summon', { at: .1 });
   });
   bonkBtn.addEventListener('click', async () => {
     if (busy || target.hidden) return;
@@ -251,7 +280,7 @@
     runner.classList.remove('charge'); runner.offsetHeight; runner.classList.add('charge');
     Sound.fx.whoosh();
     await wait(520);
-    Sound.fx.bonk();
+    Sound.fx.bonk(); Sound.voice('bonk', { at: .05 });
     target.classList.add('bonked');
     burst(...centerOf(target), 16);
     await wait(450);
@@ -259,7 +288,7 @@
     bonks++;
     $('#bonkCount').textContent = `Bonked: ${bonks}`;
     setMood(dudu2, 'excited');
-    Sound.fx.giggle(.05);
+    Sound.voice('bonked', { at: .5 }) || Sound.fx.giggle(.05);
     $('#b2').textContent = bonks > 1 ? 'Next! Dudu is on duty all night.' : 'Hehe. Gone. Anything else?';
     $('#b2').classList.add('show');
     $('#emptyArena').hidden = false;
@@ -279,7 +308,8 @@
     if (kind === 'duvet') { bed.classList.add('covered'); Sound.fx.whoosh(); }
     if (kind === 'lamp') { fort.classList.add('dim'); Sound.fx.pop(); }
     if (kind === 'tea') { bed.classList.add('has-tea'); Sound.fx.squeak(); }
-    if (kind === 'plush') { bed.classList.add('has-plush'); Sound.fx.squeak(); Sound.fx.giggle(.15); }
+    if (kind === 'plush') { bed.classList.add('has-plush'); Sound.fx.squeak(); }
+    Sound.voice(kind, { at: .15 });
     const n = used.size;
     cells[n].classList.add('on'); shell.classList.add('full');
     Sound.fx.heart(n);
@@ -289,7 +319,7 @@
       setTimeout(() => {
         setMood($('.bed-bubu'), 'sleep');
         $('#n3').textContent = 'Resting without speaking is 100% allowed. Encouraged, even.';
-        Sound.fx.chime();
+        Sound.fx.chime(); Sound.voice('sleepy', { at: 1.2 });
       }, 600);
     }
   }
@@ -363,7 +393,7 @@
       const f = b.classList.toggle('flipped');
       b.setAttribute('aria-label', f ? m.back : `Photo: ${m.label}. Tap to turn over.`);
       Sound.fx.flip();
-      if (f) { Sound.fx.heart(Math.random() * 4 | 0); floatHearts(...centerOf(b), 2); }
+      if (f) { Sound.voice('polaroid') || Sound.fx.heart(Math.random() * 4 | 0); floatHearts(...centerOf(b), 2); }
     });
     wall.appendChild(b);
   });
@@ -410,7 +440,7 @@
     raf = null;
     hugBtn.classList.remove('holding'); hugBtn.style.setProperty('--p', 0);
     snuggle.classList.add('hug');
-    Sound.fx.chime(); Sound.fx.giggle(.5);
+    Sound.fx.chime(); Sound.voice('hug', { at: .3 }) || Sound.fx.giggle(.5);
     burst(...centerOf(snuggle), 18);
     floatHearts(...centerOf(snuggle), 8);
     $('.hug-label', hugBtn).textContent = 'Hug again';
