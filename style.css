@@ -411,6 +411,9 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .scene-quiz.won .quiz-pizza { animation: none; transform: rotate(160deg) scale(.5); opacity: .4; }
 .choices { position: relative; display: flex; gap: 14px; justify-content: center; align-items: center; width: 100%; max-width: 480px; min-height: 64px; }
 .runaway { transition: transform .28s cubic-bezier(.3,1.6,.5,1); touch-action: none; }
+#pickBubu { position: relative; z-index: 2; }
+.choices .btn { white-space: nowrap; }
+.runaway { position: relative; z-index: 1; }
 
 /* ---------- silly 2: boop ---------- */
 .scene-boop { background: radial-gradient(circle at 50% 70%, #FDE2E4, #F4C9CF); }

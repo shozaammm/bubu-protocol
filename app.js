@@ -4,6 +4,9 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const INK = '#4B2C25';
+  // Each chapter sets itself up in isolation: if one page's markup is missing (e.g. a stale cached
+  // index.html), only that page breaks instead of the whole book.
+  const safe = fn => { try { fn(); } catch (e) { console.error('[bubu]', e); } };
 
   /* ================= BEARS ================= */
   const LOOK = {
@@ -218,7 +221,7 @@
   const enter = {}, leave = {};
   function go(i) {
     if (i < 0 || i >= pages.length || i === current) return;
-    leave[current] && leave[current]();
+    leave[current] && safe(leave[current]);
     book.classList.toggle('going-back', i < current);
     pages[current].classList.remove('is-active');
     current = i;
@@ -228,7 +231,7 @@
     pager.classList.toggle('is-hidden', i === 0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     fxLayer.replaceChildren(); Sound.fx.flip();
-    enter[i] && enter[i]();
+    enter[i] && safe(enter[i]);
   }
   const pos = () => track.indexOf(current);
   prevBtn.addEventListener('click', () => go(pos() > 0 ? track[pos() - 1] : 0));
@@ -245,7 +248,7 @@
     const v = !Sound.on; Sound.setOn(v);
     soundBtn.setAttribute('aria-pressed', v);
     soundBtn.setAttribute('aria-label', v ? 'Turn sound off' : 'Turn sound on');
-    $('#kissVid').muted = !v;
+    const kv = $('#kissVid'); if (kv) kv.muted = !v;
   });
   function open(name) {
     Sound.init(); Sound.setOn(Sound.on); Sound.startMusic();
@@ -254,463 +257,492 @@
     go(TRACKS[name][0]);
   }
   $$('.mood-pick .btn').forEach(b => b.addEventListener('click', () => open(b.dataset.track)));
-  $('#toHappy').addEventListener('click', () => open('happy'));
+  $('#toHappy')?.addEventListener('click', () => open('happy'));
+  $('#startBtn')?.addEventListener('click', () => open('cozy')); // older cached cover
+
 
   /* ---------- Chapter 1: the heavy door ---------- */
-  const door = $('.scene-door');
-  let doorTimers = [];
-  enter[1] = () => {
-    doorTimers.forEach(clearTimeout); doorTimers = [];
-    door.classList.remove('open', 'inside-now', 'handed');
-    setMood($('.bubu-walk .bear-slot'), 'tired');
-    $('#b1a').classList.remove('show'); $('#b1b').classList.remove('show');
-    $('#hint1').hidden = false;
-    $('#n1').textContent = 'Bubu drags herself home from coliz, bag scraping along the floor. One more step. Just one more.';
-    const walker = $('.bubu-walk'); walker.style.animation = 'none'; walker.offsetHeight; walker.style.animation = '';
-    doorTimers.push(setTimeout(() => { $('#b1a').classList.add('show'); Sound.voice('tired') || Sound.fx.sigh(); }, 2400));
-  };
-  $('#knob').addEventListener('click', async () => {
-    if (door.classList.contains('open')) return;
-    $('#hint1').hidden = true; $('#b1a').classList.remove('show');
-    Sound.fx.creak();
-    door.classList.add('open');
-    await wait(900);
-    $('#b1b').classList.add('show'); Sound.voice('welcome') || (Sound.fx.squeak(), Sound.fx.giggle(.3));
-    $('#n1').textContent = 'Dudu was already at the door, way too excited, with a slice of Domino’s ready for her.';
-    await wait(2800);
-    $('#b1b').classList.remove('show');
-    door.classList.add('handed');
-    setMood($('.bubu-walk .bear-slot'), 'excited');
-    Sound.fx.pop(); Sound.voice('pizza', { at: .1 }) || Sound.fx.giggle(.2);
-    burst(...centerOf($('.bubu-walk')), 12);
-    $('#n1').textContent = 'One look at the pizza and Bubu’s tired face melts into the biggest smile.';
-    await wait(2600);
-    door.classList.add('inside-now');
-    floatHearts(...centerOf($('.doorway')), 5);
-    Sound.fx.chime();
+  safe(() => {
+    const door = $('.scene-door');
+    let doorTimers = [];
+    enter[1] = () => {
+      doorTimers.forEach(clearTimeout); doorTimers = [];
+      door.classList.remove('open', 'inside-now', 'handed');
+      setMood($('.bubu-walk .bear-slot'), 'tired');
+      $('#b1a').classList.remove('show'); $('#b1b').classList.remove('show');
+      $('#hint1').hidden = false;
+      $('#n1').textContent = 'Bubu drags herself home from coliz, bag scraping along the floor. One more step. Just one more.';
+      const walker = $('.bubu-walk'); walker.style.animation = 'none'; walker.offsetHeight; walker.style.animation = '';
+      doorTimers.push(setTimeout(() => { $('#b1a').classList.add('show'); Sound.voice('tired') || Sound.fx.sigh(); }, 2400));
+    };
+    $('#knob').addEventListener('click', async () => {
+      if (door.classList.contains('open')) return;
+      $('#hint1').hidden = true; $('#b1a').classList.remove('show');
+      Sound.fx.creak();
+      door.classList.add('open');
+      await wait(900);
+      $('#b1b').classList.add('show'); Sound.voice('welcome') || (Sound.fx.squeak(), Sound.fx.giggle(.3));
+      $('#n1').textContent = 'Dudu was already at the door, way too excited, with a slice of Domino’s ready for her.';
+      await wait(2800);
+      $('#b1b').classList.remove('show');
+      door.classList.add('handed');
+      setMood($('.bubu-walk .bear-slot'), 'excited');
+      Sound.fx.pop(); Sound.voice('pizza', { at: .1 }) || Sound.fx.giggle(.2);
+      burst(...centerOf($('.bubu-walk')), 12);
+      $('#n1').textContent = 'One look at the pizza and Bubu’s tired face melts into the biggest smile.';
+      await wait(2600);
+      door.classList.add('inside-now');
+      floatHearts(...centerOf($('.doorway')), 5);
+      Sound.fx.chime();
+    });
   });
 
   /* ---------- Chapter 2: the hammer room ---------- */
-  const form = $('#annoyForm'), input = $('#annoyInput'), bonkBtn = $('#bonkBtn');
-  const target = $('#target'), runner = $('#runner'), dudu2 = $('.bear-slot', runner);
-  let bonks = 0, busy = false;
-  enter[2] = () => setTimeout(() => $('#b2').classList.add('show'), 300);
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const txt = input.value.trim() || 'whatever it was';
-    $('#signText').textContent = txt;
-    target.classList.remove('bonked'); target.hidden = false;
-    target.style.animation = 'none'; target.offsetHeight; target.style.animation = '';
-    $('#emptyArena').hidden = true;
-    $('#b2').textContent = 'Oh, it’s YOU. Stay right there.';
-    setMood(dudu2, 'angry');
-    bonkBtn.disabled = false; bonkBtn.focus({ preventScroll: true });
-    input.value = '';
-    Sound.fx.pop(); Sound.voice('summon', { at: .1 });
-  });
-  bonkBtn.addEventListener('click', async () => {
-    if (busy || target.hidden) return;
-    busy = true; bonkBtn.disabled = true;
-    $('#b2').classList.remove('show');
-    const rr = runner.getBoundingClientRect(), tr = target.getBoundingClientRect();
-    runner.style.setProperty('--dist', Math.max(0, tr.left - rr.right + 10) + 'px');
-    runner.classList.remove('charge'); runner.offsetHeight; runner.classList.add('charge');
-    Sound.fx.whoosh();
-    await wait(520);
-    Sound.fx.bonk(); Sound.voice('bonk', { at: .05 });
-    target.classList.add('bonked');
-    burst(...centerOf(target), 16);
-    await wait(450);
-    target.hidden = true;
-    bonks++;
-    $('#bonkCount').textContent = `Bonked: ${bonks}`;
-    setMood(dudu2, 'excited');
-    Sound.voice('bonked', { at: .5 }) || Sound.fx.giggle(.05);
-    $('#b2').textContent = bonks > 1 ? 'Next! Dudu is on duty all night.' : 'Hehe. Gone. Anything else?';
-    $('#b2').classList.add('show');
-    $('#emptyArena').hidden = false;
-    runner.classList.remove('charge');
-    busy = false;
-    input.focus({ preventScroll: true });
+  safe(() => {
+    const form = $('#annoyForm'), input = $('#annoyInput'), bonkBtn = $('#bonkBtn');
+    const target = $('#target'), runner = $('#runner'), dudu2 = $('.bear-slot', runner);
+    let bonks = 0, busy = false;
+    enter[2] = () => setTimeout(() => $('#b2').classList.add('show'), 300);
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const txt = input.value.trim() || 'whatever it was';
+      $('#signText').textContent = txt;
+      target.classList.remove('bonked'); target.hidden = false;
+      target.style.animation = 'none'; target.offsetHeight; target.style.animation = '';
+      $('#emptyArena').hidden = true;
+      $('#b2').textContent = 'Oh, it’s YOU. Stay right there.';
+      setMood(dudu2, 'angry');
+      bonkBtn.disabled = false; bonkBtn.focus({ preventScroll: true });
+      input.value = '';
+      Sound.fx.pop(); Sound.voice('summon', { at: .1 });
+    });
+    bonkBtn.addEventListener('click', async () => {
+      if (busy || target.hidden) return;
+      busy = true; bonkBtn.disabled = true;
+      $('#b2').classList.remove('show');
+      const rr = runner.getBoundingClientRect(), tr = target.getBoundingClientRect();
+      runner.style.setProperty('--dist', Math.max(0, tr.left - rr.right + 10) + 'px');
+      runner.classList.remove('charge'); runner.offsetHeight; runner.classList.add('charge');
+      Sound.fx.whoosh();
+      await wait(520);
+      Sound.fx.bonk(); Sound.voice('bonk', { at: .05 });
+      target.classList.add('bonked');
+      burst(...centerOf(target), 16);
+      await wait(450);
+      target.hidden = true;
+      bonks++;
+      $('#bonkCount').textContent = `Bonked: ${bonks}`;
+      setMood(dudu2, 'excited');
+      Sound.voice('bonked', { at: .5 }) || Sound.fx.giggle(.05);
+      $('#b2').textContent = bonks > 1 ? 'Next! Dudu is on duty all night.' : 'Hehe. Gone. Anything else?';
+      $('#b2').classList.add('show');
+      $('#emptyArena').hidden = false;
+      runner.classList.remove('charge');
+      busy = false;
+      input.focus({ preventScroll: true });
+    });
   });
 
   /* ---------- Chapter 3: the blanket fort ---------- */
-  const fort = $('#fortScene'), bed = $('#bed'), cells = $$('.cell'), shell = $('#battery');
-  const LABELS = ['Almost empty. That’s okay.', 'A tiny bit warmer.', 'Getting cozy.', 'Almost there.', 'Full of love. No talking required.'];
-  const used = new Set();
-  function apply(kind) {
-    if (used.has(kind)) return;
-    used.add(kind);
-    $(`.item[data-item="${kind}"]`).classList.add('used');
-    if (kind === 'duvet') { bed.classList.add('covered'); Sound.fx.whoosh(); }
-    if (kind === 'lamp') { fort.classList.add('dim'); Sound.fx.pop(); }
-    if (kind === 'tea') { bed.classList.add('has-tea'); Sound.fx.squeak(); }
-    if (kind === 'plush') { bed.classList.add('has-plush'); Sound.fx.squeak(); }
-    Sound.voice(kind, { at: .15 });
-    const n = used.size;
-    cells[n].classList.add('on'); shell.classList.add('full');
-    Sound.fx.heart(n);
-    $('#batteryLabel').textContent = LABELS[n];
-    floatHearts(...centerOf(bed), 3);
-    if (n === cells.length - 1) {
-      setTimeout(() => {
-        setMood($('.bed-bubu'), 'sleep');
-        $('#n3').textContent = 'Resting without speaking is 100% allowed. Encouraged, even.';
-        Sound.fx.chime(); Sound.voice('sleepy', { at: 1.2 });
-      }, 600);
+  safe(() => {
+    const fort = $('#fortScene'), bed = $('#bed'), cells = $$('.cell'), shell = $('#battery');
+    const LABELS = ['Almost empty. That’s okay.', 'A tiny bit warmer.', 'Getting cozy.', 'Almost there.', 'Full of love. No talking required.'];
+    const used = new Set();
+    function apply(kind) {
+      if (used.has(kind)) return;
+      used.add(kind);
+      $(`.item[data-item="${kind}"]`).classList.add('used');
+      if (kind === 'duvet') { bed.classList.add('covered'); Sound.fx.whoosh(); }
+      if (kind === 'lamp') { fort.classList.add('dim'); Sound.fx.pop(); }
+      if (kind === 'tea') { bed.classList.add('has-tea'); Sound.fx.squeak(); }
+      if (kind === 'plush') { bed.classList.add('has-plush'); Sound.fx.squeak(); }
+      Sound.voice(kind, { at: .15 });
+      const n = used.size;
+      cells[n].classList.add('on'); shell.classList.add('full');
+      Sound.fx.heart(n);
+      $('#batteryLabel').textContent = LABELS[n];
+      floatHearts(...centerOf(bed), 3);
+      if (n === cells.length - 1) {
+        setTimeout(() => {
+          setMood($('.bed-bubu'), 'sleep');
+          $('#n3').textContent = 'Resting without speaking is 100% allowed. Encouraged, even.';
+          Sound.fx.chime(); Sound.voice('sleepy', { at: 1.2 });
+        }, 600);
+      }
     }
-  }
-  $$('.item').forEach(item => {
-    let sx, sy, dragging = false, ox, oy;
-    item.addEventListener('pointerdown', e => {
-      if (used.has(item.dataset.item)) return;
-      sx = e.clientX; sy = e.clientY; dragging = false;
-      item.setPointerCapture(e.pointerId);
-    });
-    item.addEventListener('pointermove', e => {
-      if (sx == null) return;
-      if (!dragging && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) {
-        dragging = true;
-        const r = item.getBoundingClientRect(); ox = sx - r.left; oy = sy - r.top;
-        item._ph = document.createElement('div');
-        item._ph.style.cssText = `width:${r.width}px;height:${r.height}px`;
-        item.after(item._ph);
-        item.classList.add('dragging');
-        Sound.fx.squeak();
-      }
-      if (dragging) {
-        item.style.left = e.clientX - ox + 'px'; item.style.top = e.clientY - oy + 'px';
-        const b = bed.getBoundingClientRect();
-        bed.classList.toggle('drop-ready', e.clientX > b.left && e.clientX < b.right && e.clientY > b.top - 40 && e.clientY < b.bottom);
-      }
-    });
-    const end = e => {
-      if (sx == null) return;
-      const wasDrag = dragging; sx = null; dragging = false;
-      if (!wasDrag) return; // a plain tap is handled by click
-      item.classList.remove('dragging'); item.style.left = item.style.top = '';
-      item._ph && item._ph.remove();
-      const hit = bed.classList.contains('drop-ready');
-      bed.classList.remove('drop-ready');
-      item._suppressClick = true;
-      if (hit && e.type === 'pointerup') apply(item.dataset.item);
-    };
-    item.addEventListener('pointerup', end);
-    item.addEventListener('pointercancel', end);
-    item.addEventListener('click', () => {
-      if (item._suppressClick) { item._suppressClick = false; return; }
-      apply(item.dataset.item);
+    $$('.item').forEach(item => {
+      let sx, sy, dragging = false, ox, oy;
+      item.addEventListener('pointerdown', e => {
+        if (used.has(item.dataset.item)) return;
+        sx = e.clientX; sy = e.clientY; dragging = false;
+        item.setPointerCapture(e.pointerId);
+      });
+      item.addEventListener('pointermove', e => {
+        if (sx == null) return;
+        if (!dragging && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) {
+          dragging = true;
+          const r = item.getBoundingClientRect(); ox = sx - r.left; oy = sy - r.top;
+          item._ph = document.createElement('div');
+          item._ph.style.cssText = `width:${r.width}px;height:${r.height}px`;
+          item.after(item._ph);
+          item.classList.add('dragging');
+          Sound.fx.squeak();
+        }
+        if (dragging) {
+          item.style.left = e.clientX - ox + 'px'; item.style.top = e.clientY - oy + 'px';
+          const b = bed.getBoundingClientRect();
+          bed.classList.toggle('drop-ready', e.clientX > b.left && e.clientX < b.right && e.clientY > b.top - 40 && e.clientY < b.bottom);
+        }
+      });
+      const end = e => {
+        if (sx == null) return;
+        const wasDrag = dragging; sx = null; dragging = false;
+        if (!wasDrag) return; // a plain tap is handled by click
+        item.classList.remove('dragging'); item.style.left = item.style.top = '';
+        item._ph && item._ph.remove();
+        const hit = bed.classList.contains('drop-ready');
+        bed.classList.remove('drop-ready');
+        item._suppressClick = true;
+        if (hit && e.type === 'pointerup') apply(item.dataset.item);
+      };
+      item.addEventListener('pointerup', end);
+      item.addEventListener('pointercancel', end);
+      item.addEventListener('click', () => {
+        if (item._suppressClick) { item._suppressClick = false; return; }
+        apply(item.dataset.item);
+      });
     });
   });
 
   /* ---------- Chapter 4: memory constellations ---------- */
-  // Edit these freely — front label + what's written on the back.
-  const MEMORIES = [
-    { label: 'mai coliz ja rahiii', back: 'And somehow I miss you before you even reach the gate.', bg: '#FDE2E4', art: 'bubu-wave' },
-    { label: 'Laddu', back: 'Round, sweet, and my favourite thing. No notes.', bg: '#FFF1C9', art: 'heart' },
-    { label: 'Dudu', back: 'Secretly makes me feel the best in the world when my Bubu calls me Dudu.', bg: '#E5ECFB', art: 'dudu' },
-    { label: 'cutu', back: 'Not a nickname. A factual description.', bg: '#E8F4E4', art: 'bubu' },
-    { label: 'low-battery days', back: 'You don’t have to be bubbly for me to love you. Quiet you is my favourite too.', bg: '#F3E6F7', art: 'sleep' },
-    { label: 'just existing', back: 'You don’t have to do anything today. Being you is already enough.', bg: '#FFE7D6', art: 'both' },
-  ];
-  const ART = {
-    'bubu-wave': () => bear('bubu', 'excited'), bubu: () => bear('bubu', 'happy'), dudu: () => bear('dudu', 'happy'),
-    sleep: () => bear('bubu', 'sleep'), heart: () => `<div class="heart-art">${HEART('#EE6B6B')}</div>`,
-    both: () => `<div style="display:flex;width:100%">${bear('dudu', 'happy')}${bear('bubu', 'happy')}</div>`,
-  };
-  const wall = $('#polaroids');
-  MEMORIES.forEach(m => {
-    const b = document.createElement('button');
-    b.className = 'polaroid';
-    b.setAttribute('aria-label', `Photo: ${m.label}. Tap to turn over.`);
-    b.innerHTML = `<div class="polaroid-inner">
-      <div class="face front"><div class="photo" style="background:${m.bg}">${ART[m.art]()}</div><div class="label">${m.label}</div></div>
-      <div class="face back">${m.back}</div></div>`;
-    b.addEventListener('click', () => {
-      const f = b.classList.toggle('flipped');
-      b.setAttribute('aria-label', f ? m.back : `Photo: ${m.label}. Tap to turn over.`);
-      Sound.fx.flip();
-      if (f) { Sound.voice('polaroid') || Sound.fx.heart(Math.random() * 4 | 0); floatHearts(...centerOf(b), 2); }
+  safe(() => {
+    // Edit these freely — front label + what's written on the back.
+    const MEMORIES = [
+      { label: 'mai coliz ja rahiii', back: 'And somehow I miss you before you even reach the gate.', bg: '#FDE2E4', art: 'bubu-wave' },
+      { label: 'Laddu', back: 'Round, sweet, and my favourite thing. No notes.', bg: '#FFF1C9', art: 'heart' },
+      { label: 'Dudu', back: 'Secretly makes me feel the best in the world when my Bubu calls me Dudu.', bg: '#E5ECFB', art: 'dudu' },
+      { label: 'cutu', back: 'Not a nickname. A factual description.', bg: '#E8F4E4', art: 'bubu' },
+      { label: 'low-battery days', back: 'You don’t have to be bubbly for me to love you. Quiet you is my favourite too.', bg: '#F3E6F7', art: 'sleep' },
+      { label: 'just existing', back: 'You don’t have to do anything today. Being you is already enough.', bg: '#FFE7D6', art: 'both' },
+    ];
+    const ART = {
+      'bubu-wave': () => bear('bubu', 'excited'), bubu: () => bear('bubu', 'happy'), dudu: () => bear('dudu', 'happy'),
+      sleep: () => bear('bubu', 'sleep'), heart: () => `<div class="heart-art">${HEART('#EE6B6B')}</div>`,
+      both: () => `<div style="display:flex;width:100%">${bear('dudu', 'happy')}${bear('bubu', 'happy')}</div>`,
+    };
+    const wall = $('#polaroids');
+    MEMORIES.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'polaroid';
+      b.setAttribute('aria-label', `Photo: ${m.label}. Tap to turn over.`);
+      b.innerHTML = `<div class="polaroid-inner">
+        <div class="face front"><div class="photo" style="background:${m.bg}">${ART[m.art]()}</div><div class="label">${m.label}</div></div>
+        <div class="face back">${m.back}</div></div>`;
+      b.addEventListener('click', () => {
+        const f = b.classList.toggle('flipped');
+        b.setAttribute('aria-label', f ? m.back : `Photo: ${m.label}. Tap to turn over.`);
+        Sound.fx.flip();
+        if (f) { Sound.voice('polaroid') || Sound.fx.heart(Math.random() * 4 | 0); floatHearts(...centerOf(b), 2); }
+      });
+      wall.appendChild(b);
     });
-    wall.appendChild(b);
+    const bulbs = $('.bulbs');
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('span'); s.className = 'bulb';
+      const x = (i + .5) / 12; // follow the fairy-light curve roughly
+      s.style.left = `calc(${x * 100}% - 5px)`;
+      s.style.top = 6 + Math.abs(Math.sin(x * Math.PI * 4)) * 14 + 'px';
+      s.style.animationDelay = (i % 4) * .5 + 's';
+      bulbs.appendChild(s);
+    }
   });
-  const bulbs = $('.bulbs');
-  for (let i = 0; i < 12; i++) {
-    const s = document.createElement('span'); s.className = 'bulb';
-    const x = (i + .5) / 12; // follow the fairy-light curve roughly
-    s.style.left = `calc(${x * 100}% - 5px)`;
-    s.style.top = 6 + Math.abs(Math.sin(x * Math.PI * 4)) * 14 + 'px';
-    s.style.animationDelay = (i % 4) * .5 + 's';
-    bulbs.appendChild(s);
-  }
 
   /* ---------- Chapter 5: the cozy haven ---------- */
-  const stars = $('.stars');
-  for (let i = 0; i < 40; i++) {
-    const s = document.createElement('span'); s.className = 'star';
-    s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 60 + '%';
-    s.style.animationDelay = Math.random() * 3 + 's';
-    stars.appendChild(s);
-  }
-  const hugBtn = $('#hugBtn'), snuggle = $('#snuggle'), letter = $('#letter');
-  const HOLD = 1600;
-  let raf, t0, hugTick;
-  function hold(e) {
-    e.preventDefault();
-    if (raf) return;
-    hugBtn.classList.add('holding'); t0 = performance.now(); hugTick = 0;
-    const loop = now => {
-      const p = Math.min(1, (now - t0) / HOLD);
-      hugBtn.style.setProperty('--p', p);
-      if (p > hugTick + .25) { hugTick += .25; Sound.fx.heart(hugTick * 4); }
-      if (p >= 1) return hugDone();
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-  }
-  function release() {
-    if (!raf) return;
-    cancelAnimationFrame(raf); raf = null;
-    hugBtn.classList.remove('holding'); hugBtn.style.setProperty('--p', 0);
-  }
-  function hugDone() {
-    raf = null;
-    hugBtn.classList.remove('holding'); hugBtn.style.setProperty('--p', 0);
-    snuggle.classList.add('hug');
-    Sound.fx.chime(); Sound.voice('hug', { at: .3 }) || Sound.fx.giggle(.5);
-    burst(...centerOf(snuggle), 18);
-    floatHearts(...centerOf(snuggle), 8);
-    $('.hug-label', hugBtn).textContent = 'Hug again';
-    if (letter.hidden) {
-      letter.hidden = false;
-      setTimeout(() => letter.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 400);
+  safe(() => {
+    const stars = $('.stars');
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement('span'); s.className = 'star';
+      s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 60 + '%';
+      s.style.animationDelay = Math.random() * 3 + 's';
+      stars.appendChild(s);
     }
-    setTimeout(() => snuggle.classList.remove('hug'), 2600);
-  }
-  hugBtn.addEventListener('pointerdown', hold);
-  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => hugBtn.addEventListener(t, release));
-  hugBtn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) hold(e); });
-  hugBtn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') release(); });
-  hugBtn.addEventListener('contextmenu', e => e.preventDefault());
+    const hugBtn = $('#hugBtn'), snuggle = $('#snuggle'), letter = $('#letter');
+    const HOLD = 1600;
+    let raf, t0, hugTick;
+    function hold(e) {
+      e.preventDefault();
+      if (raf) return;
+      hugBtn.classList.add('holding'); t0 = performance.now(); hugTick = 0;
+      const loop = now => {
+        const p = Math.min(1, (now - t0) / HOLD);
+        hugBtn.style.setProperty('--p', p);
+        if (p > hugTick + .25) { hugTick += .25; Sound.fx.heart(hugTick * 4); }
+        if (p >= 1) return hugDone();
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+    }
+    function release() {
+      if (!raf) return;
+      cancelAnimationFrame(raf); raf = null;
+      hugBtn.classList.remove('holding'); hugBtn.style.setProperty('--p', 0);
+    }
+    function hugDone() {
+      raf = null;
+      hugBtn.classList.remove('holding'); hugBtn.style.setProperty('--p', 0);
+      snuggle.classList.add('hug');
+      Sound.fx.chime(); Sound.voice('hug', { at: .3 }) || Sound.fx.giggle(.5);
+      burst(...centerOf(snuggle), 18);
+      floatHearts(...centerOf(snuggle), 8);
+      $('.hug-label', hugBtn).textContent = 'Hug again';
+      if (letter.hidden) {
+        letter.hidden = false;
+        setTimeout(() => letter.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 400);
+      }
+      setTimeout(() => snuggle.classList.remove('hug'), 2600);
+    }
+    hugBtn.addEventListener('pointerdown', hold);
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => hugBtn.addEventListener(t, release));
+    hugBtn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) hold(e); });
+    hugBtn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') release(); });
+    hugBtn.addEventListener('contextmenu', e => e.preventDefault());
+  });
 
   /* ---------- Epilogue: always ---------- */
-  const VOWS = [
-    { q: 'If we argue,', a: 'I will still love you.', w: 'storm', moods: ['tired', 'angry'], gap: 150, sfx: 'rumble' },
-    { q: 'If we disagree,', a: 'I still love you.', w: 'clash', moods: ['angry', 'angry'], gap: 110, sfx: 'clash' },
-    { q: 'If we have a bad day,', a: 'I will still love you.', w: 'rain', moods: ['tired', 'tired'], gap: 70, sfx: 'rain' },
-  ];
-  const alwaysScene = $('#alwaysScene'), pair = $('#pair'), vow = $('#vow'), vowBtn = $('#vowBtn');
-  const [aDudu, aBubu] = $$('.bear-slot', pair);
-  let vstep = 0, vbusy = false, vtimers = [];
-  const vlater = (fn, ms) => vtimers.push(setTimeout(fn, ms));
-  function showVow(i) {
-    const v = VOWS[i];
-    $$('.w', alwaysScene).forEach(w => w.classList.remove('on', 'melt'));
-    $(`.w-${v.w}`, alwaysScene).classList.add('on');
-    setMood(aDudu, v.moods[0]); setMood(aBubu, v.moods[1]);
-    pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .6 : v.gap) + 'px');
-    vow.textContent = v.q;
-    vowBtn.textContent = `…${v.a}`;
-    vowBtn.hidden = false;
-    Sound.fx[v.sfx]();
-  }
-  enter[6] = () => {
-    vtimers.forEach(clearTimeout); vtimers = [];
-    vstep = 0; vbusy = false;
-    alwaysScene.classList.remove('sunny'); pair.classList.remove('hug');
-    vow.classList.remove('final'); $('#theEnd').hidden = true; $('#toHappy').hidden = true;
-    showVow(0);
-  };
-  vowBtn.addEventListener('click', () => {
-    if (vbusy) return;
-    vbusy = true; vowBtn.hidden = true;
-    if (vstep < VOWS.length) {
-      const v = VOWS[vstep], w = $(`.w-${v.w}`, alwaysScene);
-      vow.innerHTML = '';
-      vow.append(v.q + ' ');
-      const yes = document.createElement('span'); yes.className = 'yes'; yes.textContent = v.a;
-      vow.append(yes);
-      burst(...centerOf(w), 12);
-      w.classList.replace('on', 'melt');
-      setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
-      pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .45 : v.gap * .7) + 'px');
-      Sound.fx.resolve(); Sound.voice('always', { at: .25 });
-      vstep++;
-      vlater(() => {
-        vbusy = false;
-        if (vstep < VOWS.length) return showVow(vstep);
-        // the bridge line before the finale
-        alwaysScene.classList.add('sunny');
-        pair.style.setProperty('--gap', '24px');
-        setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
-        vow.textContent = 'There is nothing in this world that will ever change my feelings for you, no matter the struggle.';
-        vowBtn.textContent = 'At the end of the day…';
-        vowBtn.hidden = false;
-        Sound.fx.chime();
-      }, 2200);
-      return;
+  safe(() => {
+    const VOWS = [
+      { q: 'If we argue,', a: 'I will still love you.', w: 'storm', moods: ['tired', 'angry'], gap: 150, sfx: 'rumble' },
+      { q: 'If we disagree,', a: 'I still love you.', w: 'clash', moods: ['angry', 'angry'], gap: 110, sfx: 'clash' },
+      { q: 'If we have a bad day,', a: 'I will still love you.', w: 'rain', moods: ['tired', 'tired'], gap: 70, sfx: 'rain' },
+    ];
+    const alwaysScene = $('#alwaysScene'), pair = $('#pair'), vow = $('#vow'), vowBtn = $('#vowBtn');
+    const [aDudu, aBubu] = $$('.bear-slot', pair);
+    let vstep = 0, vbusy = false, vtimers = [];
+    const vlater = (fn, ms) => vtimers.push(setTimeout(fn, ms));
+    function showVow(i) {
+      const v = VOWS[i];
+      $$('.w', alwaysScene).forEach(w => w.classList.remove('on', 'melt'));
+      $(`.w-${v.w}`, alwaysScene).classList.add('on');
+      setMood(aDudu, v.moods[0]); setMood(aBubu, v.moods[1]);
+      pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .6 : v.gap) + 'px');
+      vow.textContent = v.q;
+      vowBtn.textContent = `…${v.a}`;
+      vowBtn.hidden = false;
+      Sound.fx[v.sfx]();
     }
-    // finale
-    pair.classList.add('hug');
-    $('.w-heart', alwaysScene).classList.add('on');
-    setMood(aDudu, 'sleep'); setMood(aBubu, 'excited');
-    vow.textContent = 'At the end of the day, I will always love you.';
-    vow.classList.remove('final'); vow.offsetHeight; vow.classList.add('final');
-    Sound.fx.lullaby(); Sound.voice('forever', { at: .6 });
-    const [cx, cy] = centerOf(pair);
-    vlater(() => burst(cx, cy - 40, 22), 700);
-    for (let i = 0; i < 6; i++) vlater(() => {
-      const r = alwaysScene.getBoundingClientRect();
-      floatHearts(r.left + r.width * (.15 + Math.random() * .7), r.bottom - 30, 4);
-    }, 900 + i * 500);
-    vlater(() => { $('#theEnd').hidden = false; $('#toHappy').hidden = false; vbusy = false; }, 3800);
+    enter[6] = () => {
+      vtimers.forEach(clearTimeout); vtimers = [];
+      vstep = 0; vbusy = false;
+      alwaysScene.classList.remove('sunny'); pair.classList.remove('hug');
+      vow.classList.remove('final'); $('#theEnd').hidden = true; $('#toHappy').hidden = true;
+      showVow(0);
+    };
+    vowBtn.addEventListener('click', () => {
+      if (vbusy) return;
+      vbusy = true; vowBtn.hidden = true;
+      if (vstep < VOWS.length) {
+        const v = VOWS[vstep], w = $(`.w-${v.w}`, alwaysScene);
+        vow.innerHTML = '';
+        vow.append(v.q + ' ');
+        const yes = document.createElement('span'); yes.className = 'yes'; yes.textContent = v.a;
+        vow.append(yes);
+        burst(...centerOf(w), 12);
+        w.classList.replace('on', 'melt');
+        setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
+        pair.style.setProperty('--gap', (innerWidth < 560 ? v.gap * .45 : v.gap * .7) + 'px');
+        Sound.fx.resolve(); Sound.voice('always', { at: .25 });
+        vstep++;
+        vlater(() => {
+          vbusy = false;
+          if (vstep < VOWS.length) return showVow(vstep);
+          // the bridge line before the finale
+          alwaysScene.classList.add('sunny');
+          pair.style.setProperty('--gap', '24px');
+          setMood(aDudu, 'happy'); setMood(aBubu, 'happy');
+          vow.textContent = 'There is nothing in this world that will ever change my feelings for you, no matter the struggle.';
+          vowBtn.textContent = 'At the end of the day…';
+          vowBtn.hidden = false;
+          Sound.fx.chime();
+        }, 2200);
+        return;
+      }
+      // finale
+      pair.classList.add('hug');
+      $('.w-heart', alwaysScene).classList.add('on');
+      setMood(aDudu, 'sleep'); setMood(aBubu, 'excited');
+      vow.textContent = 'At the end of the day, I will always love you.';
+      vow.classList.remove('final'); vow.offsetHeight; vow.classList.add('final');
+      Sound.fx.lullaby(); Sound.voice('forever', { at: .6 });
+      const [cx, cy] = centerOf(pair);
+      vlater(() => burst(cx, cy - 40, 22), 700);
+      for (let i = 0; i < 6; i++) vlater(() => {
+        const r = alwaysScene.getBoundingClientRect();
+        floatHearts(r.left + r.width * (.15 + Math.random() * .7), r.bottom - 30, 4);
+      }, 900 + i * 500);
+      vlater(() => { $('#theEnd').hidden = false; $('#toHappy').hidden = false; vbusy = false; }, 3800);
+    });
   });
 
   /* ---------- Silly 1: the very serious quiz ---------- */
-  const quiz = $('#quizScene'), qBubble = $('#qBubble'), qNote = $('#qNote');
-  const pickBubu = $('#pickBubu'), pickPizza = $('#pickPizza'), choices = $('#choices');
-  const DODGES = ['Domino’s pizza', 'nope', 'pizza is shy', 'can’t catch me', 'pizza has left the chat'];
-  let dodges = 0, answered = false, lastDodge = 0;
-  enter[7] = () => {
-    dodges = 0; answered = false;
-    quiz.classList.remove('won');
-    pickPizza.hidden = false; pickPizza.textContent = DODGES[0]; pickPizza.style.transform = '';
-    pickBubu.textContent = 'Bubu';
-    setMood($('#quizDudu'), 'happy'); setMood($('#quizBubu'), 'happy');
-    qBubble.textContent = 'Very serious question. Who does Dudu love more?'; qBubble.classList.add('show');
-    qNote.textContent = 'Think carefully. There is a correct answer.';
-  };
-  function dodge(e) {
-    e.preventDefault();
-    // one press fires pointerenter/pointerdown/click; count it once
-    if (answered || performance.now() - lastDodge < 400) return;
-    lastDodge = performance.now();
-    dodges++;
-    Sound.fx.whoosh(); if (dodges % 2) Sound.voice('dodge', { at: .05 });
-    if (dodges >= DODGES.length) {
-      pickPizza.hidden = true;
-      qNote.textContent = 'The pizza option has fled. Only one answer remains. Funny how that works.';
-      return;
+  safe(() => {
+    const quiz = $('#quizScene'), qBubble = $('#qBubble'), qNote = $('#qNote');
+    const pickBubu = $('#pickBubu'), pickPizza = $('#pickPizza'), choices = $('#choices');
+    const DODGES = ['Domino’s pizza', 'nope', 'pizza is shy', 'can’t catch me', 'pizza has left the chat'];
+    let dodges = 0, answered = false, lastDodge = 0;
+    enter[7] = () => {
+      dodges = 0; answered = false;
+      quiz.classList.remove('won');
+      pickPizza.hidden = false; pickPizza.textContent = DODGES[0]; pickPizza.style.transform = '';
+      pickBubu.textContent = 'Bubu';
+      setMood($('#quizDudu'), 'happy'); setMood($('#quizBubu'), 'happy');
+      qBubble.textContent = 'Very serious question. Who does Dudu love more?'; qBubble.classList.add('show');
+      qNote.textContent = 'Think carefully. There is a correct answer.';
+    };
+    function dodge(e) {
+      e.preventDefault();
+      // one press fires pointerenter/pointerdown/click; count it once
+      if (answered || performance.now() - lastDodge < 400) return;
+      lastDodge = performance.now();
+      dodges++;
+      Sound.fx.whoosh(); if (dodges % 2) Sound.voice('dodge', { at: .05 });
+      if (dodges >= DODGES.length) {
+        pickPizza.hidden = true;
+        qNote.textContent = 'The pizza option has fled. Only one answer remains. Funny how that works.';
+        return;
+      }
+      pickPizza.textContent = DODGES[dodges];
+      // hop to a random spot that stays inside the row (measured from its untransformed position)
+      pickPizza.style.transition = 'none'; pickPizza.style.transform = '';
+      const box = choices.getBoundingClientRect(), r = pickPizza.getBoundingClientRect();
+      pickPizza.offsetHeight; pickPizza.style.transition = '';
+      // never land on top of the Bubu button: try random spots until one clears it
+      const bb = pickBubu.getBoundingClientRect(), pad = 12;
+      let x = 0, y = 0;
+      for (let k = 0; k < 20; k++) {
+        x = Math.random() * Math.max(0, box.width - r.width) - (r.left - box.left);
+        y = Math.random() * 50 - 25;
+        const L = r.left + x, T = r.top + y;
+        if (L > bb.right + pad || L + r.width < bb.left - pad || T > bb.bottom + pad || T + r.height < bb.top - pad) break;
+      }
+      const sign = x < 0 ? -1 : 1;
+      pickPizza.style.transform = `translate(${x | 0}px, ${y | 0}px) rotate(${sign * 8}deg)`;
+      setMood($('#quizDudu'), 'excited');
+      qNote.textContent = ['Hmm. The button moved.', 'Weird. It keeps doing that.', 'Almost like it’s the wrong answer.', 'Last chance, pizza.'][dodges - 1];
     }
-    pickPizza.textContent = DODGES[dodges];
-    // hop to a random spot that stays inside the row (measured from its untransformed position)
-    pickPizza.style.transition = 'none'; pickPizza.style.transform = '';
-    const box = choices.getBoundingClientRect(), r = pickPizza.getBoundingClientRect();
-    pickPizza.offsetHeight; pickPizza.style.transition = '';
-    const x = Math.random() * Math.max(0, box.width - r.width) - (r.left - box.left), sign = x < 0 ? -1 : 1;
-    pickPizza.style.transform = `translate(${x | 0}px, ${(Math.random() * 50 - 25) | 0}px) rotate(${sign * 8}deg)`;
-    setMood($('#quizDudu'), 'excited');
-    qNote.textContent = ['Hmm. The button moved.', 'Weird. It keeps doing that.', 'Almost like it’s the wrong answer.', 'Last chance, pizza.'][dodges - 1];
-  }
-  // dodge before a press can land: pointerdown on touch, pointerenter for a mouse
-  pickPizza.addEventListener('pointerdown', dodge);
-  pickPizza.addEventListener('pointerenter', e => e.pointerType === 'mouse' && dodge(e));
-  pickPizza.addEventListener('click', dodge);
-  pickBubu.addEventListener('click', () => {
-    if (answered) return;
-    answered = true;
-    quiz.classList.add('won');
-    setMood($('#quizDudu'), 'excited'); setMood($('#quizBubu'), 'excited');
-    qBubble.textContent = 'CORRECT. Obviously. Pizza is a very close second.';
-    qNote.textContent = 'Score: Bubu 1, pizza 0. Pizza has been informed.';
-    pickBubu.textContent = 'Bubu (correct!)';
-    Sound.fx.chime(); Sound.voice('correct', { at: .2 }) || Sound.fx.giggle(.2);
-    burst(...centerOf($('.quiz-bubu')), 18);
-    floatHearts(...centerOf(quiz), 6);
+    // dodge before a press can land: pointerdown on touch, pointerenter for a mouse
+    pickPizza.addEventListener('pointerdown', dodge);
+    pickPizza.addEventListener('pointerenter', e => e.pointerType === 'mouse' && dodge(e));
+    pickPizza.addEventListener('click', dodge);
+    pickBubu.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      quiz.classList.add('won');
+      setMood($('#quizDudu'), 'excited'); setMood($('#quizBubu'), 'excited');
+      qBubble.textContent = 'CORRECT. Obviously. Pizza is a very close second.';
+      qNote.textContent = 'Score: Bubu 1, pizza 0. Pizza has been informed.';
+      pickBubu.textContent = 'Bubu (correct!)';
+      Sound.fx.chime(); Sound.voice('correct', { at: .2 }) || Sound.fx.giggle(.2);
+      burst(...centerOf($('.quiz-bubu')), 18);
+      floatHearts(...centerOf(quiz), 6);
+    });
   });
 
   /* ---------- Silly 2: boop the Dudu ---------- */
-  const boopScene = $('#boopScene'), boopTarget = $('#boopTarget'), boopDudu = $('#boopDudu');
-  const boopBubble = $('#boopBubble'), boopNote = $('#boopNote');
-  const BOOP_LINES = {
-    1: 'Hey!', 2: 'I said no boops.', 3: 'hehe. I mean. STOP.', 5: 'Bubu I am warning you…',
-    7: 'My nose is not a button!!', 9: 'One more and I’m fainting. I mean it.',
-  };
-  const FAINT = 10;
-  let boops = 0, fainted = false, boopTimer;
-  enter[8] = () => {
-    clearTimeout(boopTimer);
-    boops = 0; fainted = false;
-    boopScene.classList.remove('fainted');
-    setMood(boopDudu, 'happy');
-    $('#boopCount').textContent = 'Boops: 0';
-    boopBubble.textContent = 'I am a very serious bear. Do not boop me.'; boopBubble.classList.add('show');
-    boopNote.textContent = 'Tap Dudu. He says he doesn’t like it. He is lying.';
-  };
-  boopTarget.addEventListener('click', e => {
-    if (fainted) return;
-    boops++;
-    $('#boopCount').textContent = `Boops: ${boops}`;
-    boopTarget.classList.remove('booped'); boopTarget.offsetHeight; boopTarget.classList.add('booped');
-    const [x, y] = e.clientX ? [e.clientX, e.clientY] : centerOf(boopTarget);
-    burst(x, y, 6);
-    if (boops === FAINT) {
-      fainted = true;
-      boopScene.classList.add('fainted');
-      setMood(boopDudu, 'sleep');
-      boopBubble.textContent = '*faints from cuteness overload*';
-      boopNote.textContent = 'Dudu is down. Dudu is very dramatic.';
-      Sound.fx.bonk(); Sound.voice('faint', { at: .3 }) || Sound.fx.giggle(.3);
-      boopTimer = setTimeout(() => {
-        boopScene.classList.remove('fainted');
-        setMood(boopDudu, 'excited');
-        boopBubble.textContent = '…okay that was fun. Again?';
-        boopNote.textContent = 'He has recovered. Boop counter reset for round two.';
-        boops = 0; fainted = false;
-        $('#boopCount').textContent = 'Boops: 0';
-        floatHearts(...centerOf(boopTarget), 5);
-      }, 3200);
-      return;
-    }
-    setMood(boopDudu, boops % 2 ? 'excited' : 'angry');
-    if (BOOP_LINES[boops]) boopBubble.textContent = BOOP_LINES[boops];
-    Sound.fx.squeak();
-    if (boops % 3 === 0) Sound.voice('boop', { at: .05 });
+  safe(() => {
+    const boopScene = $('#boopScene'), boopTarget = $('#boopTarget'), boopDudu = $('#boopDudu');
+    const boopBubble = $('#boopBubble'), boopNote = $('#boopNote');
+    const BOOP_LINES = {
+      1: 'Hey!', 2: 'I said no boops.', 3: 'hehe. I mean. STOP.', 5: 'Bubu I am warning you…',
+      7: 'My nose is not a button!!', 9: 'One more and I’m fainting. I mean it.',
+    };
+    const FAINT = 10;
+    let boops = 0, fainted = false, boopTimer;
+    enter[8] = () => {
+      clearTimeout(boopTimer);
+      boops = 0; fainted = false;
+      boopScene.classList.remove('fainted');
+      setMood(boopDudu, 'happy');
+      $('#boopCount').textContent = 'Boops: 0';
+      boopBubble.textContent = 'I am a very serious bear. Do not boop me.'; boopBubble.classList.add('show');
+      boopNote.textContent = 'Tap Dudu. He says he doesn’t like it. He is lying.';
+    };
+    boopTarget.addEventListener('click', e => {
+      if (fainted) return;
+      boops++;
+      $('#boopCount').textContent = `Boops: ${boops}`;
+      boopTarget.classList.remove('booped'); boopTarget.offsetHeight; boopTarget.classList.add('booped');
+      const [x, y] = e.clientX ? [e.clientX, e.clientY] : centerOf(boopTarget);
+      burst(x, y, 6);
+      if (boops === FAINT) {
+        fainted = true;
+        boopScene.classList.add('fainted');
+        setMood(boopDudu, 'sleep');
+        boopBubble.textContent = '*faints from cuteness overload*';
+        boopNote.textContent = 'Dudu is down. Dudu is very dramatic.';
+        Sound.fx.bonk(); Sound.voice('faint', { at: .3 }) || Sound.fx.giggle(.3);
+        boopTimer = setTimeout(() => {
+          boopScene.classList.remove('fainted');
+          setMood(boopDudu, 'excited');
+          boopBubble.textContent = '…okay that was fun. Again?';
+          boopNote.textContent = 'He has recovered. Boop counter reset for round two.';
+          boops = 0; fainted = false;
+          $('#boopCount').textContent = 'Boops: 0';
+          floatHearts(...centerOf(boopTarget), 5);
+        }, 3200);
+        return;
+      }
+      setMood(boopDudu, boops % 2 ? 'excited' : 'angry');
+      if (BOOP_LINES[boops]) boopBubble.textContent = BOOP_LINES[boops];
+      Sound.fx.squeak();
+      if (boops % 3 === 0) Sound.voice('boop', { at: .05 });
+    });
   });
 
   /* ---------- Silly 3: kiss please? ---------- */
-  // Bubu asks for a kiss, Dudu plays hard to get, then gives in. Cues are timed to media/kiss.mp4.
-  const kissScene = $('#kissScene'), vid = $('#kissVid'), kissBtn = $('#kissBtn'), kissNote = $('#kissNote');
-  const kBubu = $('#kissBubu'), kDudu = $('#kissDudu');
-  const KISS_CUES = [
-    { t: .2,  bubu: 'Dudu… kiss please?', note: 'Bubu asks very nicely.' },
-    { t: 1.9, dudu: 'Hmm. Let me think about it.', note: 'Dudu pretends to think. He is not thinking.' },
-    { t: 3.3, dudu: 'Nope. Busy.', bubu: 'DUDU.', note: 'Bubu is not accepting that answer.' },
-    { t: 4.6, dudu: 'Okay okay, fine…', note: 'Dudu folds immediately. As expected.' },
-    { t: 5.9, kiss: true, note: 'Kiss delivered.' },
-    { t: 7.4, note: 'Both extremely pleased with themselves.' },
-  ];
-  let cue = 0;
-  const say = (el, txt) => { el.classList.toggle('show', !!txt); if (txt) el.textContent = txt; };
-  function resetKiss() { cue = 0; say(kBubu); say(kDudu); Sound.hush(false); }
-  enter[9] = () => {
-    vid.pause(); vid.currentTime = 0; resetKiss();
-    kissBtn.textContent = 'Ask Dudu for a kiss';
-    kissNote.textContent = 'Bubu wants one kiss. Dudu has decided to be difficult about it.';
-  };
-  leave[9] = () => { vid.pause(); resetKiss(); };
-  kissBtn.addEventListener('click', () => {
-    if (!vid.paused) return;
-    vid.currentTime = 0; vid.muted = !Sound.on; resetKiss();
-    vid.play().then(() => {
-      Sound.hush(true);
-      kissBtn.textContent = 'Waiting for Dudu…';
-    }).catch(() => { kissNote.textContent = 'The video didn’t load. Dudu says the kiss still counts.'; });
-  });
-  vid.addEventListener('timeupdate', () => {
-    while (cue < KISS_CUES.length && vid.currentTime >= KISS_CUES[cue].t) {
-      const c = KISS_CUES[cue++];
-      say(kBubu, c.bubu); say(kDudu, c.dudu);
-      kissNote.textContent = c.note;
-      if (c.kiss) { floatHearts(...centerOf(kissScene), 8); Sound.fx.heart(3); }
-    }
-  });
-  vid.addEventListener('ended', () => {
-    resetKiss();
-    kissBtn.textContent = 'Ask again';
-    kissNote.textContent = 'He was always going to say yes. He just likes being asked twice.';
-    floatHearts(...centerOf(kissScene), 6);
-    Sound.fx.chime();
+  safe(() => {
+    // Bubu asks for a kiss, Dudu plays hard to get, then gives in. Cues are timed to media/kiss.mp4.
+    const kissScene = $('#kissScene'), vid = $('#kissVid'), kissBtn = $('#kissBtn'), kissNote = $('#kissNote');
+    const kBubu = $('#kissBubu'), kDudu = $('#kissDudu');
+    const KISS_CUES = [
+      { t: .2,  bubu: 'Dudu… kiss please?', note: 'Bubu asks very nicely.' },
+      { t: 1.9, dudu: 'Hmm. Let me think about it.', note: 'Dudu pretends to think. He is not thinking.' },
+      { t: 3.3, dudu: 'Nope. Busy.', bubu: 'DUDU.', note: 'Bubu is not accepting that answer.' },
+      { t: 4.6, dudu: 'Okay okay, fine…', note: 'Dudu folds immediately. As expected.' },
+      { t: 5.9, kiss: true, note: 'Kiss delivered.' },
+      { t: 7.4, note: 'Both extremely pleased with themselves.' },
+    ];
+    let cue = 0;
+    const say = (el, txt) => { el.classList.toggle('show', !!txt); if (txt) el.textContent = txt; };
+    function resetKiss() { cue = 0; say(kBubu); say(kDudu); Sound.hush(false); }
+    enter[9] = () => {
+      vid.pause(); vid.currentTime = 0; resetKiss();
+      kissBtn.textContent = 'Ask Dudu for a kiss';
+      kissNote.textContent = 'Bubu wants one kiss. Dudu has decided to be difficult about it.';
+    };
+    leave[9] = () => { vid.pause(); resetKiss(); };
+    kissBtn.addEventListener('click', () => {
+      if (!vid.paused) return;
+      vid.currentTime = 0; vid.muted = !Sound.on; resetKiss();
+      vid.play().then(() => {
+        Sound.hush(true);
+        kissBtn.textContent = 'Waiting for Dudu…';
+      }).catch(() => { kissNote.textContent = 'The video didn’t load. Dudu says the kiss still counts.'; });
+    });
+    vid.addEventListener('timeupdate', () => {
+      while (cue < KISS_CUES.length && vid.currentTime >= KISS_CUES[cue].t) {
+        const c = KISS_CUES[cue++];
+        say(kBubu, c.bubu); say(kDudu, c.dudu);
+        kissNote.textContent = c.note;
+        if (c.kiss) { floatHearts(...centerOf(kissScene), 8); Sound.fx.heart(3); }
+      }
+    });
+    vid.addEventListener('ended', () => {
+      resetKiss();
+      kissBtn.textContent = 'Ask again';
+      kissNote.textContent = 'He was always going to say yes. He just likes being asked twice.';
+      floatHearts(...centerOf(kissScene), 6);
+      Sound.fx.chime();
+    });
   });
 
 })();
