@@ -42,6 +42,7 @@
     </svg>`;
   }
   const paintBears = () => $$('.bear-slot').forEach(s => { s.innerHTML = bear(s.dataset.bear, s.dataset.mood); });
+  paintBears(); // first thing, so the bears show even if something later fails
   const setMood = (slot, mood) => { slot.dataset.mood = mood; slot.innerHTML = bear(slot.dataset.bear, mood); };
 
   /* ================= SOUND ================= */
@@ -712,7 +713,4 @@
     Sound.fx.chime();
   });
 
-  /* ---------- boot ---------- */
-  paintBears();
-  pager.classList.add('is-hidden');
 })();

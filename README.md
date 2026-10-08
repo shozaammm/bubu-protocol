@@ -36,3 +36,7 @@ The cover now asks how Bubu is feeling: **Battery low** opens the cozy book abov
 | 3 · Kiss please? | The Bubu Dudu clip (`media/kiss.mp4`, cropped to the bears) with timed speech bubbles: Bubu asks for a kiss, Dudu plays hard to get (*"Hmm. Let me think about it."*, *"Nope. Busy."*), then gives in. Music hushes while it plays; hearts on the kiss. Cues live in `KISS_CUES` in `app.js`. |
 
 Reaction sounds `sounds/h01–h05.m4a` are cut from the clip's audio (`VOICE` in `app.js`). The background loop is now a gentle C-major I–V–vi–IV with a soft arpeggio (~72 bpm), still quiet.
+
+## Deploying changes
+
+`index.html` loads `style.css?v=…` and `app.js?v=…`. Bump both version stamps on every change, or phones that cached the old script will load it against the new page and break.
