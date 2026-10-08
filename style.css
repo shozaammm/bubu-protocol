@@ -429,13 +429,12 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 60px); line-height: 1; font-weight: 
 .boop-bubu { position: absolute; left: 4%; bottom: 6%; width: clamp(80px, 15vw, 110px); animation: bob 1.4s ease-in-out infinite; }
 .scene-boop .bubble-dudu { right: 4%; top: 8%; }
 
-/* ---------- silly 3: dance ---------- */
-.scene-dance { background: #FDFDFD; display: grid; place-items: center; }
-.scene-dance video { width: 100%; height: 100%; object-fit: contain; display: block; }
-.disco { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
-  background: radial-gradient(circle at 15% 20%, #F6C86B55, transparent 30%), radial-gradient(circle at 85% 25%, #F4AFB466, transparent 32%), radial-gradient(circle at 50% 0%, #9FD3F244, transparent 40%); }
-.scene-dance.partying .disco { opacity: 1; animation: disco 1.8s ease-in-out infinite alternate; }
-@keyframes disco { to { filter: hue-rotate(60deg); transform: scale(1.04); } }
+/* ---------- silly 3: kiss please? ---------- */
+.scene-kiss { background: #FDFDFD; display: grid; place-items: center; }
+.scene-kiss video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.scene-kiss .bubble-bubu { left: 4%; top: 6%; }
+.scene-kiss .bubble-dudu { right: 4%; top: 6%; left: auto; }
+.scene-kiss .bubble-dudu.show { transition-delay: .05s; }
 
 @media (max-width: 560px) {
   .mood-pick .btn { min-width: 0; flex: 1; font-size: 18px; padding: 10px 12px; white-space: nowrap; }

@@ -136,7 +136,7 @@
       summon: ['b06'], bonk: ['b07', 'b08', 'b09'], bonked: ['b10'],
       duvet: ['b11'], lamp: ['b12'], tea: ['b13'], plush: ['b14'], sleepy: ['b15'],
       polaroid: ['b16', 'b17'], hug: ['b18'], always: ['b04', 'b10', 'b05'], forever: ['b18'],
-      // silly book (h01–h05 cut from the dance clip's audio)
+      // silly book (h01–h05 cut from the kiss clip's audio)
       happy: ['h01'], correct: ['h05'], dodge: ['h02', 'h03'], boop: ['h02', 'h03', 'h04'], faint: ['h05'],
     };
     const buffers = {}, turn = {};
@@ -203,7 +203,7 @@
   const TRACKS = { cozy: [1, 2, 3, 4, 5, 6], happy: [7, 8, 9] };
   const TITLES = ['Cover', 'Chapter 1: The heavy door', 'Chapter 2: The hammer room', 'Chapter 3: The blanket fort',
     'Chapter 4: Memory constellations', 'Chapter 5: The cozy haven', 'Epilogue: Always',
-    'Silly page 1: The very serious quiz', 'Silly page 2: Boop the Dudu', 'Silly page 3: Dance party'];
+    'Silly page 1: The very serious quiz', 'Silly page 2: Boop the Dudu', 'Silly page 3: Kiss please?'];
   let current = 0, track = TRACKS.cozy;
   function setTrack(name) {
     track = TRACKS[name];
@@ -244,7 +244,7 @@
     const v = !Sound.on; Sound.setOn(v);
     soundBtn.setAttribute('aria-pressed', v);
     soundBtn.setAttribute('aria-label', v ? 'Turn sound off' : 'Turn sound on');
-    $('#danceVid').muted = !v;
+    $('#kissVid').muted = !v;
   });
   function open(name) {
     Sound.init(); Sound.setOn(Sound.on); Sound.startMusic();
@@ -667,47 +667,48 @@
     if (boops % 3 === 0) Sound.voice('boop', { at: .05 });
   });
 
-  /* ---------- Silly 3: dance party ---------- */
-  const danceScene = $('#danceScene'), vid = $('#danceVid'), danceBtn = $('#danceBtn'), danceNote = $('#danceNote');
-  let confetti, heartsDone = false;
-  function stopDance() {
-    clearInterval(confetti); confetti = null;
-    danceScene.classList.remove('partying');
-    Sound.hush(false);
-  }
+  /* ---------- Silly 3: kiss please? ---------- */
+  // Bubu asks for a kiss, Dudu plays hard to get, then gives in. Cues are timed to media/kiss.mp4.
+  const kissScene = $('#kissScene'), vid = $('#kissVid'), kissBtn = $('#kissBtn'), kissNote = $('#kissNote');
+  const kBubu = $('#kissBubu'), kDudu = $('#kissDudu');
+  const KISS_CUES = [
+    { t: .2,  bubu: 'Dudu… kiss please?', note: 'Bubu asks very nicely.' },
+    { t: 1.9, dudu: 'Hmm. Let me think about it.', note: 'Dudu pretends to think. He is not thinking.' },
+    { t: 3.3, dudu: 'Nope. Busy.', bubu: 'DUDU.', note: 'Bubu is not accepting that answer.' },
+    { t: 4.6, dudu: 'Okay okay, fine…', note: 'Dudu folds immediately. As expected.' },
+    { t: 5.9, kiss: true, note: 'Kiss delivered.' },
+    { t: 7.4, note: 'Both extremely pleased with themselves.' },
+  ];
+  let cue = 0;
+  const say = (el, txt) => { el.classList.toggle('show', !!txt); if (txt) el.textContent = txt; };
+  function resetKiss() { cue = 0; say(kBubu); say(kDudu); Sound.hush(false); }
   enter[9] = () => {
-    vid.pause(); vid.currentTime = 0;
-    danceBtn.textContent = 'Start the dance party';
-    danceNote.textContent = 'Happy Bubu detected. Dudu has prepared a routine.';
+    vid.pause(); vid.currentTime = 0; resetKiss();
+    kissBtn.textContent = 'Ask Dudu for a kiss';
+    kissNote.textContent = 'Bubu wants one kiss. Dudu has decided to be difficult about it.';
   };
-  leave[9] = () => { vid.pause(); stopDance(); };
-  danceBtn.addEventListener('click', () => {
+  leave[9] = () => { vid.pause(); resetKiss(); };
+  kissBtn.addEventListener('click', () => {
     if (!vid.paused) return;
-    vid.currentTime = 0; vid.muted = !Sound.on; heartsDone = false;
+    vid.currentTime = 0; vid.muted = !Sound.on; resetKiss();
     vid.play().then(() => {
       Sound.hush(true);
-      danceScene.classList.add('partying');
-      danceBtn.textContent = 'Dancing…';
-      danceNote.textContent = 'Step 1: wiggle. Step 2: wiggle more.';
-      const r = () => danceScene.getBoundingClientRect();
-      confetti = setInterval(() => {
-        const b = r();
-        burst(b.left + b.width * (.1 + Math.random() * .8), b.top + b.height * (.15 + Math.random() * .3), 8);
-      }, 900);
-    }).catch(() => { danceNote.textContent = 'The video didn’t load. Dudu is dancing anyway, trust.'; });
+      kissBtn.textContent = 'Waiting for Dudu…';
+    }).catch(() => { kissNote.textContent = 'The video didn’t load. Dudu says the kiss still counts.'; });
   });
   vid.addEventListener('timeupdate', () => {
-    if (!heartsDone && vid.currentTime > 5.8) {
-      heartsDone = true;
-      floatHearts(...centerOf(danceScene), 8);
-      danceNote.textContent = 'Step 3: surprise kiss. Step 4: happy wiggle.';
+    while (cue < KISS_CUES.length && vid.currentTime >= KISS_CUES[cue].t) {
+      const c = KISS_CUES[cue++];
+      say(kBubu, c.bubu); say(kDudu, c.dudu);
+      kissNote.textContent = c.note;
+      if (c.kiss) { floatHearts(...centerOf(kissScene), 8); Sound.fx.heart(3); }
     }
   });
   vid.addEventListener('ended', () => {
-    stopDance();
-    danceBtn.textContent = 'Again!';
-    danceNote.textContent = 'Happy Bubu = happiest Dudu. That’s the whole rule.';
-    burst(...centerOf(danceScene), 22);
+    resetKiss();
+    kissBtn.textContent = 'Ask again';
+    kissNote.textContent = 'He was always going to say yes. He just likes being asked twice.';
+    floatHearts(...centerOf(kissScene), 6);
     Sound.fx.chime();
   });
 

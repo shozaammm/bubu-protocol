@@ -33,6 +33,6 @@ The cover now asks how Bubu is feeling: **Battery low** opens the cozy book abov
 |---|---|
 | 1 · The very serious quiz | Dudu with a mic: *"Who does Dudu love more?"* The **Domino’s pizza** button runs away every time it's touched (*nope → pizza is shy → can’t catch me → pizza has left the chat*). **Bubu** is correct. |
 | 2 · Boop the Dudu | Tap Dudu; he protests harder each time. At 10 boops he faints from cuteness overload, then gets back up for round two. |
-| 3 · Dance party | The Bubu Dudu dance clip (`media/dance.mp4`, cropped to the bears) plays with its own audio, music hushes, confetti and hearts on the kiss. |
+| 3 · Kiss please? | The Bubu Dudu clip (`media/kiss.mp4`, cropped to the bears) with timed speech bubbles: Bubu asks for a kiss, Dudu plays hard to get (*"Hmm. Let me think about it."*, *"Nope. Busy."*), then gives in. Music hushes while it plays; hearts on the kiss. Cues live in `KISS_CUES` in `app.js`. |
 
 Reaction sounds `sounds/h01–h05.m4a` are cut from the clip's audio (`VOICE` in `app.js`). The background loop is now a gentle C-major I–V–vi–IV with a soft arpeggio (~72 bpm), still quiet.
