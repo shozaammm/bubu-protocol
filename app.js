@@ -52,7 +52,7 @@
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
       musicBus = ctx.createGain(); musicBus.gain.value = 0.0;
-      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
       musicBus.connect(lp); lp.connect(master);
     }
     function tone({ f = 440, to, dur = .2, type = 'sine', vol = .2, at = 0, out } = {}) {
@@ -95,21 +95,34 @@
       lullaby:() => [[659, 0], [784, .3], [880, .6], [784, .9], [659, 1.2], [587, 1.5], [659, 1.8], [523, 2.3], [659, 2.6], [784, 2.9], [1046, 3.3]]
                       .forEach(([f, at]) => { tone({ f, dur: .9, vol: .09, at }); tone({ f: f * 2, dur: .4, vol: .02, at }); }),
     };
-    // lo-fi bedtime loop: soft triangle pads + sparse music-box notes
-    const CHORDS = [[174.6, 220, 261.6, 329.6], [164.8, 196, 246.9, 293.7], [146.8, 174.6, 220, 261.6], [130.8, 164.8, 196, 246.9]];
-    const BOX = [523.3, 587.3, 659.3, 784, 880, 1046.5];
+    // sunny little loop in C major (I–V–vi–IV): soft pads, a bouncy plucked arpeggio, a music-box hook.
+    // Unhurried (~72 bpm) and kept quiet so it sits under everything.
+    const BAR = 3.4, BEAT = BAR / 4;
+    const CHORDS = [
+      { bass: 130.8, pad: [261.6, 329.6, 392] },   // C
+      { bass: 98,    pad: [246.9, 293.7, 392] },   // G/B
+      { bass: 110,   pad: [261.6, 329.6, 440] },   // Am
+      { bass: 87.3,  pad: [261.6, 349.2, 440] },   // F
+    ];
+    const HOOK = [[1568, 0], [1318.5, .5], [1568, 1], [1760, 2], [1568, 3]]; // in beats
+    const ARP = [0, 1, 2, 1, 0, 2, 1, 2];
     let step = 0;
     function bar() {
-      const ch = CHORDS[step++ % CHORDS.length];
-      ch.forEach(f => tone({ f, dur: 3.9, type: 'triangle', vol: .05, out: musicBus }));
-      tone({ f: ch[0] / 2, dur: 3.9, vol: .07, out: musicBus });
-      [0, 1.1, 2.2, 3].forEach(at => { if (Math.random() < .55) tone({ f: BOX[Math.random() * BOX.length | 0], dur: 1.2, vol: .045, at, out: musicBus }); });
+      const n = step++, ch = CHORDS[n % CHORDS.length];
+      ch.pad.forEach(f => tone({ f, dur: BAR + .1, vol: .028, out: musicBus }));
+      tone({ f: ch.bass, dur: BEAT * 1.6, type: 'triangle', vol: .06, out: musicBus });
+      tone({ f: ch.bass, dur: BEAT * 1.6, type: 'triangle', vol: .045, at: BEAT * 2, out: musicBus });
+      ARP.forEach((k, i) => tone({ f: ch.pad[k] * 2, dur: .22, type: 'triangle', vol: .022, at: i * BEAT / 2, out: musicBus }));
+      if (n % 4 === 0) HOOK.forEach(([f, b]) => tone({ f, dur: .7, vol: .03, at: b * BEAT, out: musicBus }));
+      else if (Math.random() < .5) tone({ f: [1046.5, 1174.7, 1318.5, 1568][Math.random() * 4 | 0], dur: .8, vol: .028, at: (Math.random() * 4 | 0) * BEAT, out: musicBus });
     }
     function startMusic() {
       if (!ctx || musicTimer) return;
       musicBus.gain.setTargetAtTime(1, ctx.currentTime, 1.5);
-      bar(); musicTimer = setInterval(bar, 4000);
+      bar(); musicTimer = setInterval(bar, BAR * 1000);
     }
+    let hushed = false;
+    function hush(v) { hushed = v; if (ctx) musicBus.gain.setTargetAtTime(v ? 0 : 1, ctx.currentTime, v ? .15 : .8); }
     function setOn(v) {
       on = v;
       if (!ctx) return;
@@ -123,6 +136,8 @@
       summon: ['b06'], bonk: ['b07', 'b08', 'b09'], bonked: ['b10'],
       duvet: ['b11'], lamp: ['b12'], tea: ['b13'], plush: ['b14'], sleepy: ['b15'],
       polaroid: ['b16', 'b17'], hug: ['b18'], always: ['b04', 'b10', 'b05'], forever: ['b18'],
+      // silly book (h01–h05 cut from the dance clip's audio)
+      happy: ['h01'], correct: ['h05'], dodge: ['h02', 'h03'], boop: ['h02', 'h03', 'h04'], faint: ['h05'],
     };
     const buffers = {}, turn = {};
     let ready = Promise.resolve();
@@ -140,12 +155,14 @@
       const src = ctx.createBufferSource(), g = ctx.createGain(), t = ctx.currentTime + at;
       g.gain.value = vol; src.buffer = buf; src.connect(g); g.connect(master); src.start(t);
       // duck the music under her voice
-      musicBus.gain.setTargetAtTime(.35, t, .05);
-      musicBus.gain.setTargetAtTime(1, t + buf.duration, .4);
+      if (!hushed) {
+        musicBus.gain.setTargetAtTime(.35, t, .05);
+        musicBus.gain.setTargetAtTime(1, t + buf.duration, .4);
+      }
       return true;
     }
     document.addEventListener('visibilitychange', () => { if (ctx) document.hidden ? ctx.suspend() : on && ctx.resume(); });
-    return { init() { const first = !ctx; init(); if (first) loadVoices(); }, fx, voice, startMusic, setOn, get on() { return on; }, get ready() { return ready; } };
+    return { init() { const first = !ctx; init(); if (first) loadVoices(); }, fx, voice, startMusic, setOn, hush, get on() { return on; }, get ready() { return ready; } };
   })();
 
   /* ================= PARTICLES ================= */
@@ -182,35 +199,43 @@
   /* ================= PAGES ================= */
   const pages = $$('.page'), book = $('#book'), pager = $('#pager');
   const dots = $('#dots'), prevBtn = $('#prevBtn'), nextBtn = $('#nextBtn');
-  const TITLES = ['Cover', 'The heavy door', 'The hammer room', 'The blanket fort', 'Memory constellations', 'The cozy haven', 'Always'];
-  let current = 0;
-  pages.forEach((_, i) => {
-    const li = document.createElement('li'), b = document.createElement('button');
-    b.setAttribute('aria-label', i === 6 ? 'Epilogue: Always' : i ? `Chapter ${i}: ${TITLES[i]}` : 'Cover');
-    b.addEventListener('click', () => go(i));
-    li.appendChild(b); dots.appendChild(li);
-  });
-  const enter = {};
+  // Two books share the cover: the cozy one for low-battery days, the silly one for happy days.
+  const TRACKS = { cozy: [1, 2, 3, 4, 5, 6], happy: [7, 8, 9] };
+  const TITLES = ['Cover', 'Chapter 1: The heavy door', 'Chapter 2: The hammer room', 'Chapter 3: The blanket fort',
+    'Chapter 4: Memory constellations', 'Chapter 5: The cozy haven', 'Epilogue: Always',
+    'Silly page 1: The very serious quiz', 'Silly page 2: Boop the Dudu', 'Silly page 3: Dance party'];
+  let current = 0, track = TRACKS.cozy;
+  function setTrack(name) {
+    track = TRACKS[name];
+    dots.replaceChildren(...track.map(i => {
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.setAttribute('aria-label', TITLES[i]);
+      b.addEventListener('click', () => go(i));
+      li.appendChild(b); return li;
+    }));
+  }
+  const enter = {}, leave = {};
   function go(i) {
     if (i < 0 || i >= pages.length || i === current) return;
+    leave[current] && leave[current]();
     book.classList.toggle('going-back', i < current);
     pages[current].classList.remove('is-active');
     current = i;
     pages[i].classList.add('is-active');
-    $$('button', dots).forEach((b, j) => j === i ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current'));
-    prevBtn.style.visibility = i === 0 ? 'hidden' : 'visible';
-    nextBtn.textContent = i === pages.length - 1 ? 'Read again' : 'Next page';
+    $$('button', dots).forEach((b, j) => track[j] === i ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current'));
+    nextBtn.textContent = i === track[track.length - 1] ? 'Back to the cover' : 'Next page';
     pager.classList.toggle('is-hidden', i === 0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     fxLayer.replaceChildren(); Sound.fx.flip();
     enter[i] && enter[i]();
   }
-  prevBtn.addEventListener('click', () => go(current - 1));
-  nextBtn.addEventListener('click', () => go(current === pages.length - 1 ? 0 : current + 1));
+  const pos = () => track.indexOf(current);
+  prevBtn.addEventListener('click', () => go(pos() > 0 ? track[pos() - 1] : 0));
+  nextBtn.addEventListener('click', () => go(track[pos() + 1] ?? 0));
   document.addEventListener('keydown', e => {
     if (e.target.matches('input')) return;
     if (e.key === 'ArrowRight' && current > 0) nextBtn.click();
-    if (e.key === 'ArrowLeft') go(current - 1);
+    if (e.key === 'ArrowLeft' && current > 0) prevBtn.click();
   });
 
   const soundBtn = $('#soundBtn');
@@ -219,12 +244,16 @@
     const v = !Sound.on; Sound.setOn(v);
     soundBtn.setAttribute('aria-pressed', v);
     soundBtn.setAttribute('aria-label', v ? 'Turn sound off' : 'Turn sound on');
+    $('#danceVid').muted = !v;
   });
-  $('#startBtn').addEventListener('click', () => {
+  function open(name) {
     Sound.init(); Sound.setOn(Sound.on); Sound.startMusic();
-    Sound.ready.then(() => Sound.voice('start') || Sound.fx.giggle());
-    go(1);
-  });
+    Sound.ready.then(() => Sound.voice(name === 'happy' ? 'happy' : 'start') || Sound.fx.giggle());
+    setTrack(name);
+    go(TRACKS[name][0]);
+  }
+  $$('.mood-pick .btn').forEach(b => b.addEventListener('click', () => open(b.dataset.track)));
+  $('#toHappy').addEventListener('click', () => open('happy'));
 
   /* ---------- Chapter 1: the heavy door ---------- */
   const door = $('.scene-door');
@@ -488,7 +517,7 @@
     vtimers.forEach(clearTimeout); vtimers = [];
     vstep = 0; vbusy = false;
     alwaysScene.classList.remove('sunny'); pair.classList.remove('hug');
-    vow.classList.remove('final'); $('#theEnd').hidden = true;
+    vow.classList.remove('final'); $('#theEnd').hidden = true; $('#toHappy').hidden = true;
     showVow(0);
   };
   vowBtn.addEventListener('click', () => {
@@ -533,7 +562,153 @@
       const r = alwaysScene.getBoundingClientRect();
       floatHearts(r.left + r.width * (.15 + Math.random() * .7), r.bottom - 30, 4);
     }, 900 + i * 500);
-    vlater(() => { $('#theEnd').hidden = false; vbusy = false; }, 3800);
+    vlater(() => { $('#theEnd').hidden = false; $('#toHappy').hidden = false; vbusy = false; }, 3800);
+  });
+
+  /* ---------- Silly 1: the very serious quiz ---------- */
+  const quiz = $('#quizScene'), qBubble = $('#qBubble'), qNote = $('#qNote');
+  const pickBubu = $('#pickBubu'), pickPizza = $('#pickPizza'), choices = $('#choices');
+  const DODGES = ['Domino’s pizza', 'nope', 'pizza is shy', 'can’t catch me', 'pizza has left the chat'];
+  let dodges = 0, answered = false, lastDodge = 0;
+  enter[7] = () => {
+    dodges = 0; answered = false;
+    quiz.classList.remove('won');
+    pickPizza.hidden = false; pickPizza.textContent = DODGES[0]; pickPizza.style.transform = '';
+    pickBubu.textContent = 'Bubu';
+    setMood($('#quizDudu'), 'happy'); setMood($('#quizBubu'), 'happy');
+    qBubble.textContent = 'Very serious question. Who does Dudu love more?'; qBubble.classList.add('show');
+    qNote.textContent = 'Think carefully. There is a correct answer.';
+  };
+  function dodge(e) {
+    e.preventDefault();
+    // one press fires pointerenter/pointerdown/click; count it once
+    if (answered || performance.now() - lastDodge < 400) return;
+    lastDodge = performance.now();
+    dodges++;
+    Sound.fx.whoosh(); if (dodges % 2) Sound.voice('dodge', { at: .05 });
+    if (dodges >= DODGES.length) {
+      pickPizza.hidden = true;
+      qNote.textContent = 'The pizza option has fled. Only one answer remains. Funny how that works.';
+      return;
+    }
+    pickPizza.textContent = DODGES[dodges];
+    // hop to a random spot that stays inside the row (measured from its untransformed position)
+    pickPizza.style.transition = 'none'; pickPizza.style.transform = '';
+    const box = choices.getBoundingClientRect(), r = pickPizza.getBoundingClientRect();
+    pickPizza.offsetHeight; pickPizza.style.transition = '';
+    const x = Math.random() * Math.max(0, box.width - r.width) - (r.left - box.left), sign = x < 0 ? -1 : 1;
+    pickPizza.style.transform = `translate(${x | 0}px, ${(Math.random() * 50 - 25) | 0}px) rotate(${sign * 8}deg)`;
+    setMood($('#quizDudu'), 'excited');
+    qNote.textContent = ['Hmm. The button moved.', 'Weird. It keeps doing that.', 'Almost like it’s the wrong answer.', 'Last chance, pizza.'][dodges - 1];
+  }
+  // dodge before a press can land: pointerdown on touch, pointerenter for a mouse
+  pickPizza.addEventListener('pointerdown', dodge);
+  pickPizza.addEventListener('pointerenter', e => e.pointerType === 'mouse' && dodge(e));
+  pickPizza.addEventListener('click', dodge);
+  pickBubu.addEventListener('click', () => {
+    if (answered) return;
+    answered = true;
+    quiz.classList.add('won');
+    setMood($('#quizDudu'), 'excited'); setMood($('#quizBubu'), 'excited');
+    qBubble.textContent = 'CORRECT. Obviously. Pizza is a very close second.';
+    qNote.textContent = 'Score: Bubu 1, pizza 0. Pizza has been informed.';
+    pickBubu.textContent = 'Bubu (correct!)';
+    Sound.fx.chime(); Sound.voice('correct', { at: .2 }) || Sound.fx.giggle(.2);
+    burst(...centerOf($('.quiz-bubu')), 18);
+    floatHearts(...centerOf(quiz), 6);
+  });
+
+  /* ---------- Silly 2: boop the Dudu ---------- */
+  const boopScene = $('#boopScene'), boopTarget = $('#boopTarget'), boopDudu = $('#boopDudu');
+  const boopBubble = $('#boopBubble'), boopNote = $('#boopNote');
+  const BOOP_LINES = {
+    1: 'Hey!', 2: 'I said no boops.', 3: 'hehe. I mean. STOP.', 5: 'Bubu I am warning you…',
+    7: 'My nose is not a button!!', 9: 'One more and I’m fainting. I mean it.',
+  };
+  const FAINT = 10;
+  let boops = 0, fainted = false, boopTimer;
+  enter[8] = () => {
+    clearTimeout(boopTimer);
+    boops = 0; fainted = false;
+    boopScene.classList.remove('fainted');
+    setMood(boopDudu, 'happy');
+    $('#boopCount').textContent = 'Boops: 0';
+    boopBubble.textContent = 'I am a very serious bear. Do not boop me.'; boopBubble.classList.add('show');
+    boopNote.textContent = 'Tap Dudu. He says he doesn’t like it. He is lying.';
+  };
+  boopTarget.addEventListener('click', e => {
+    if (fainted) return;
+    boops++;
+    $('#boopCount').textContent = `Boops: ${boops}`;
+    boopTarget.classList.remove('booped'); boopTarget.offsetHeight; boopTarget.classList.add('booped');
+    const [x, y] = e.clientX ? [e.clientX, e.clientY] : centerOf(boopTarget);
+    burst(x, y, 6);
+    if (boops === FAINT) {
+      fainted = true;
+      boopScene.classList.add('fainted');
+      setMood(boopDudu, 'sleep');
+      boopBubble.textContent = '*faints from cuteness overload*';
+      boopNote.textContent = 'Dudu is down. Dudu is very dramatic.';
+      Sound.fx.bonk(); Sound.voice('faint', { at: .3 }) || Sound.fx.giggle(.3);
+      boopTimer = setTimeout(() => {
+        boopScene.classList.remove('fainted');
+        setMood(boopDudu, 'excited');
+        boopBubble.textContent = '…okay that was fun. Again?';
+        boopNote.textContent = 'He has recovered. Boop counter reset for round two.';
+        boops = 0; fainted = false;
+        $('#boopCount').textContent = 'Boops: 0';
+        floatHearts(...centerOf(boopTarget), 5);
+      }, 3200);
+      return;
+    }
+    setMood(boopDudu, boops % 2 ? 'excited' : 'angry');
+    if (BOOP_LINES[boops]) boopBubble.textContent = BOOP_LINES[boops];
+    Sound.fx.squeak();
+    if (boops % 3 === 0) Sound.voice('boop', { at: .05 });
+  });
+
+  /* ---------- Silly 3: dance party ---------- */
+  const danceScene = $('#danceScene'), vid = $('#danceVid'), danceBtn = $('#danceBtn'), danceNote = $('#danceNote');
+  let confetti, heartsDone = false;
+  function stopDance() {
+    clearInterval(confetti); confetti = null;
+    danceScene.classList.remove('partying');
+    Sound.hush(false);
+  }
+  enter[9] = () => {
+    vid.pause(); vid.currentTime = 0;
+    danceBtn.textContent = 'Start the dance party';
+    danceNote.textContent = 'Happy Bubu detected. Dudu has prepared a routine.';
+  };
+  leave[9] = () => { vid.pause(); stopDance(); };
+  danceBtn.addEventListener('click', () => {
+    if (!vid.paused) return;
+    vid.currentTime = 0; vid.muted = !Sound.on; heartsDone = false;
+    vid.play().then(() => {
+      Sound.hush(true);
+      danceScene.classList.add('partying');
+      danceBtn.textContent = 'Dancing…';
+      danceNote.textContent = 'Step 1: wiggle. Step 2: wiggle more.';
+      const r = () => danceScene.getBoundingClientRect();
+      confetti = setInterval(() => {
+        const b = r();
+        burst(b.left + b.width * (.1 + Math.random() * .8), b.top + b.height * (.15 + Math.random() * .3), 8);
+      }, 900);
+    }).catch(() => { danceNote.textContent = 'The video didn’t load. Dudu is dancing anyway, trust.'; });
+  });
+  vid.addEventListener('timeupdate', () => {
+    if (!heartsDone && vid.currentTime > 5.8) {
+      heartsDone = true;
+      floatHearts(...centerOf(danceScene), 8);
+      danceNote.textContent = 'Step 3: surprise kiss. Step 4: happy wiggle.';
+    }
+  });
+  vid.addEventListener('ended', () => {
+    stopDance();
+    danceBtn.textContent = 'Again!';
+    danceNote.textContent = 'Happy Bubu = happiest Dudu. That’s the whole rule.';
+    burst(...centerOf(danceScene), 22);
+    Sound.fx.chime();
   });
 
   /* ---------- boot ---------- */

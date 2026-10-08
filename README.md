@@ -24,3 +24,15 @@ Run it locally with `python3 -m http.server 8777`, then open http://localhost:87
 ## Epilogue: Always
 
 A storm cloud, two clashing speech bubbles and a rain cloud hang between the bears. Each tap answers one line (*"If we argue, I will still love you"*, *"If we disagree, I still love you"*, *"If we have a bad day, I will still love you"*). The weather melts into hearts, a Bubu voice clip plays, and the bears step closer. A bridge line follows (*"There is nothing in this world that will ever change my feelings for you, no matter the struggle."*), then *"At the end of the day, I will always love you."* The bears hug, a big heart beats in the sky, hearts float up, and a music-box lullaby plays.
+
+## Silly book (for happy days)
+
+The cover now asks how Bubu is feeling: **Battery low** opens the cozy book above, **Feeling happy!** opens a three-page silly book. The cozy epilogue ends with a link across.
+
+| Page | What happens |
+|---|---|
+| 1 · The very serious quiz | Dudu with a mic: *"Who does Dudu love more?"* The **Domino’s pizza** button runs away every time it's touched (*nope → pizza is shy → can’t catch me → pizza has left the chat*). **Bubu** is correct. |
+| 2 · Boop the Dudu | Tap Dudu; he protests harder each time. At 10 boops he faints from cuteness overload, then gets back up for round two. |
+| 3 · Dance party | The Bubu Dudu dance clip (`media/dance.mp4`, cropped to the bears) plays with its own audio, music hushes, confetti and hearts on the kiss. |
+
+Reaction sounds `sounds/h01–h05.m4a` are cut from the clip's audio (`VOICE` in `app.js`). The background loop is now a gentle C-major I–V–vi–IV with a soft arpeggio (~72 bpm), still quiet.

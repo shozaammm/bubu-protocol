@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Bubu Protocol</title>
-  <meta name="description" content="A little picture book for low-battery days.">
+  <meta name="description" content="A little picture book for every kind of day: cozy for low-battery days, silly for happy ones.">
   <meta name="theme-color" content="#F7E1E0">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐼</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,8 +34,11 @@
       <div class="caption">
         <p class="for">For Pratha</p>
         <h1>Bubu Protocol</h1>
-        <p class="lede">A little picture book for the days your battery runs out. Nothing to do here except be looked after.</p>
-        <button class="btn btn-main" id="startBtn">Open the book</button>
+        <p class="lede">A little picture book for every kind of day. So, how’s my Bubu feeling right now?</p>
+        <div class="mood-pick">
+          <button class="btn btn-main btn-cozy" data-track="cozy">Battery low <small>cozy book</small></button>
+          <button class="btn btn-main btn-happy" data-track="happy">Feeling happy! <small>silly book</small></button>
+        </div>
       </div>
     </section>
 
@@ -229,6 +232,58 @@
         <p class="vow" id="vow" aria-live="polite"></p>
         <button class="btn btn-main" id="vowBtn"></button>
         <p class="the-end" id="theEnd" hidden>The end. (Not really. Just the end of this book.)</p>
+        <button class="btn btn-switch" id="toHappy" hidden>Feeling a bit better? Open the silly book</button>
+      </div>
+    </section>
+
+    <!-- HAPPY 1: BUBU OR PIZZA -->
+    <section class="page" data-page="7" aria-label="Happy book, page 1, Bubu or pizza">
+      <div class="scene scene-quiz" id="quizScene">
+        <div class="spot" aria-hidden="true"></div>
+        <div class="quiz-dudu">
+          <div class="bear-slot" data-bear="dudu" data-mood="happy" id="quizDudu"></div>
+          <div class="mic" aria-hidden="true"></div>
+        </div>
+        <div class="bubble bubble-dudu show" id="qBubble">Very serious question. Who does Dudu love more?</div>
+        <svg class="quiz-pizza" viewBox="0 0 60 60" aria-hidden="true"><use href="#pizza"/></svg>
+        <div class="quiz-bubu"><div class="bear-slot" data-bear="bubu" data-mood="happy" id="quizBubu"></div></div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Silly book, page 1: The very serious quiz</p>
+        <div class="choices" id="choices">
+          <button class="btn btn-main" id="pickBubu">Bubu</button>
+          <button class="btn runaway" id="pickPizza">Domino’s pizza</button>
+        </div>
+        <p class="narration" id="qNote">Think carefully. There is a correct answer.</p>
+      </div>
+    </section>
+
+    <!-- HAPPY 2: BOOP THE DUDU -->
+    <section class="page" data-page="8" aria-label="Happy book, page 2, Boop the Dudu">
+      <div class="scene scene-boop" id="boopScene">
+        <div class="boop-count" id="boopCount" aria-live="polite">Boops: 0</div>
+        <button class="boop-target" id="boopTarget" aria-label="Boop Dudu">
+          <div class="bear-slot" data-bear="dudu" data-mood="happy" id="boopDudu"></div>
+        </button>
+        <div class="boop-bubu"><div class="bear-slot" data-bear="bubu" data-mood="excited"></div></div>
+        <div class="bubble bubble-dudu show" id="boopBubble">I am a very serious bear. Do not boop me.</div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Silly book, page 2: Boop the Dudu</p>
+        <p class="narration" id="boopNote">Tap Dudu. He says he doesn’t like it. He is lying.</p>
+      </div>
+    </section>
+
+    <!-- HAPPY 3: DANCE PARTY -->
+    <section class="page" data-page="9" aria-label="Happy book, page 3, Dance party">
+      <div class="scene scene-dance" id="danceScene">
+        <video id="danceVid" src="media/dance.mp4" poster="media/dance-poster.png" playsinline preload="metadata"></video>
+        <div class="disco" aria-hidden="true"></div>
+      </div>
+      <div class="caption">
+        <p class="chapter">Silly book, page 3: Dance party</p>
+        <button class="btn btn-main" id="danceBtn">Start the dance party</button>
+        <p class="narration" id="danceNote">Happy Bubu detected. Dudu has prepared a routine.</p>
       </div>
     </section>
   </main>
